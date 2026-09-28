@@ -28,11 +28,16 @@ env:
   SORT: recientes
   SLIDE_SECONDS: '12'
   PHOTOS_PER_PROPERTY: '4'
-  ACCENT_COLOR: '#e4002b'
+  # Web a la que lleva el QR de cada propiedad (vacío = ficha pública de Tokko)
+  WEBSITE_URL: https://www.maidanapropiedades.com.ar
+  # Colores en formato #rrggbb. Vacíos = se toman del logo
+  ACCENT_COLOR: ''
+  PANEL_COLOR: ''
+  CREDIT_COLOR: ''
   # Vacíos = se toman de la sucursal en Tokko
   AGENCY_NAME: ''
   AGENCY_PHONE: ''
-  AGENCY_WEBSITE: ''
+  AGENCY_WEBSITE: www.maidanapropiedades.com.ar
   AGENCY_LOGO_URL: ''
 
 jobs:

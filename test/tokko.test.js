@@ -46,6 +46,20 @@ test('los precios simbólicos se muestran como a consultar', () => {
   assert.equal(p.operations[0].price, null);
 });
 
+test('apto crédito y link a la web de la inmobiliaria', () => {
+  const p = normalizeProperty({
+    ...raw,
+    id: 8448707,
+    credit_eligible: 'Apto crédito',
+    type: { name: 'Galpón' },
+    fake_address: 'Sarmiento al 400',
+    location: { name: 'Belén De Escobar' },
+  });
+  assert.equal(p.creditEligible, true);
+  assert.equal(p.webPath, '/p/8448707-Galpon-en-Venta-en-Belen-De-Escobar-Sarmiento-al-400');
+  assert.equal(normalizeProperty({ ...raw, credit_eligible: 'No especificado' }).creditEligible, false);
+});
+
 test('web_price=false oculta el precio', () => {
   const p = normalizeProperty({ ...raw, web_price: false });
   assert.ok(p.operations.every((op) => op.price === null));

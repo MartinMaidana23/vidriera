@@ -31,6 +31,10 @@ function list(value) {
     .filter(Boolean);
 }
 
+function color(value) {
+  return /^#[0-9a-f]{6}$/i.test((value || '').trim()) ? value.trim() : '';
+}
+
 function loadConfig(env = process.env) {
   return {
     tokkoApiKey: (env.TOKKO_API_KEY || '').trim(),
@@ -41,6 +45,8 @@ function loadConfig(env = process.env) {
     maxProperties: int(env.MAX_PROPERTIES, 40),
     sort: (env.SORT || 'recientes').trim().toLowerCase(),
     onlyWithPrice: /^(1|true|si|sí|yes)$/i.test(env.ONLY_WITH_PRICE || ''),
+    // Web de la inmobiliaria para el QR (ej. https://www.miweb.com.ar). Vacío = ficha pública de Tokko.
+    websiteUrl: (env.WEBSITE_URL || '').trim().replace(/\/+$/, ''),
     onlyFeatured: /^(1|true|si|sí|yes)$/i.test(env.ONLY_FEATURED || ''),
     display: {
       slideSeconds: int(env.SLIDE_SECONDS, 12, 3),
@@ -49,7 +55,10 @@ function loadConfig(env = process.env) {
       agencyPhone: env.AGENCY_PHONE || '',
       agencyWebsite: env.AGENCY_WEBSITE || '',
       agencyLogoUrl: env.AGENCY_LOGO_URL || '',
-      accentColor: /^#[0-9a-f]{3,8}$/i.test(env.ACCENT_COLOR || '') ? env.ACCENT_COLOR : '#e4002b',
+      // Vacíos = se toman del logo de la inmobiliaria
+      accentColor: color(env.ACCENT_COLOR),
+      panelColor: color(env.PANEL_COLOR),
+      creditColor: color(env.CREDIT_COLOR),
     },
   };
 }

@@ -58,6 +58,14 @@ function num(value) {
   return Number.isFinite(n) && n > 0 ? n : null;
 }
 
+function slugify(text) {
+  return String(text)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 function cleanText(text) {
   return String(text || '')
     .replace(/<[^>]*>/g, ' ')
@@ -121,6 +129,11 @@ function normalizeProperty(p) {
     surface,
     roofedSurface: num(p.roofed_surface),
     description: cleanText(p.description).slice(0, 280),
+    creditEligible: /^apto/i.test(String(p.credit_eligible || '')),
+    publicUrl: p.public_url || '',
+    // Parte final de la URL de la web de la inmobiliaria (sitio web de Tokko):
+    // /p/8448707-Local-en-Alquiler-en-Belen-De-Escobar-Sarmiento-al-400
+    webPath: `/p/${p.id}-${slugify([p.type?.name, 'en', p.operations?.[0]?.operation_type, 'en', p.location?.name, p.fake_address || p.address].filter(Boolean).join(' '))}`,
     photos,
     createdAt: p.created_at || null,
   };

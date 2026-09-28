@@ -32,7 +32,7 @@ async function main() {
     path.join(dist, 'data', 'properties.json'),
     JSON.stringify({ demo: data.demo, updatedAt, error: null, properties: data.properties })
   );
-  fs.writeFileSync(path.join(dist, 'data', 'config.json'), JSON.stringify(displayConfig(config, data.agency, data.demo)));
+  fs.writeFileSync(path.join(dist, 'data', 'config.json'), JSON.stringify(displayConfig(config, data.agency, data.demo, data.theme)));
 
   if (data.demo) {
     const photos = path.join(dist, 'demo', 'photo');

@@ -13,7 +13,7 @@ const demoMode = !config.tokkoApiKey;
 const publicDir = path.join(rootDir, 'public');
 
 // Caché en memoria: si Tokko falla, se siguen mostrando las últimas propiedades obtenidas.
-const cache = { properties: [], agency: null, updatedAt: null, lastError: null, loading: null };
+const cache = { properties: [], agency: null, theme: null, updatedAt: null, lastError: null, loading: null };
 
 async function refresh() {
   if (cache.loading) return cache.loading;
@@ -22,6 +22,7 @@ async function refresh() {
       const data = await loadData(config);
       cache.properties = data.properties;
       cache.agency = data.agency || cache.agency;
+      cache.theme = data.theme;
       cache.updatedAt = new Date().toISOString();
       cache.lastError = null;
       console.log(`[${cache.updatedAt}] ${cache.properties.length} propiedades cargadas (${data.total} en total)`);
@@ -94,7 +95,7 @@ const server = http.createServer(async (req, res) => {
 
   if (pathname === '/data/config.json') {
     if (!cache.updatedAt) await refresh();
-    sendJson(res, 200, displayConfig(config, cache.agency, demoMode));
+    sendJson(res, 200, displayConfig(config, cache.agency, demoMode, cache.theme));
     return;
   }
 

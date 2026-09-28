@@ -67,6 +67,29 @@
     return items.slice(0, 4).join('');
   }
 
+  // ---------- QR ----------
+  // Arma el SVG a mano (en vez de usar el del generador) para controlar el tamaño en cualquier TV.
+  function renderQr(url) {
+    const box = $('qr-box');
+    if (!url || typeof window.qrcode !== 'function') {
+      box.hidden = true;
+      return;
+    }
+    const qr = window.qrcode(0, 'M');
+    qr.addData(url);
+    qr.make();
+    const n = qr.getModuleCount();
+    let path = '';
+    for (let r = 0; r < n; r++) {
+      for (let c = 0; c < n; c++) {
+        if (qr.isDark(r, c)) path += 'M' + c + ' ' + r + 'h1v1h-1z';
+      }
+    }
+    $('qr').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + n + ' ' + n +
+      '" shape-rendering="crispEdges"><path fill="#000" d="' + path + '"/></svg>';
+    box.hidden = false;
+  }
+
   // ---------- Imágenes ----------
   function preload(src) {
     return new Promise((resolve) => {
@@ -152,6 +175,8 @@
       $('features').innerHTML = featuresHtml(p);
       $('description').textContent = p.description;
       $('code').textContent = p.code ? `Cód. ${p.code}` : '';
+      renderQr(p.url);
+      $('credit').hidden = !p.creditEligible;
       panel.classList.remove('hidden');
     }, 450));
 
@@ -190,6 +215,16 @@
     $('overlay').classList.add('gone');
   }
 
+  // Oscurece un color #rrggbb (factor 0 = negro, 1 = igual)
+  function shade(hex, factor) {
+    const n = parseInt(hex.slice(1), 16);
+    const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(function (v) {
+      const s = Math.round(v * factor).toString(16);
+      return s.length < 2 ? '0' + s : s;
+    });
+    return '#' + ch.join('');
+  }
+
   // ---------- Datos ----------
   async function getJson(url) {
     const res = await fetch(url + '?t=' + Date.now(), { cache: 'no-store' });
@@ -200,7 +235,13 @@
 
   async function loadConfig() {
     config = Object.assign({}, config, await getJson('data/config.json'));
-    document.documentElement.style.setProperty('--accent', config.accentColor);
+    const root = document.documentElement.style;
+    if (config.accentColor) root.setProperty('--accent', config.accentColor);
+    if (config.creditColor) root.setProperty('--credit', config.creditColor);
+    if (config.panelColor) {
+      root.setProperty('--panel-bg', config.panelColor);
+      root.setProperty('--footer-bg', shade(config.panelColor, 0.55));
+    }
     $('agency-name').textContent = config.agencyName;
     $('agency-phone').textContent = config.agencyPhone;
     $('agency-web').textContent = config.agencyWebsite;
