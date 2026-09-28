@@ -59,7 +59,7 @@
     const add = (icon, value, label) => {
       if (value) items.push(`<li>${ICONS[icon]}<span><b>${escapeHtml(value)}</b> ${label}</span></li>`);
     };
-    add('surface', p.surface && `${fmt.format(p.surface)} m²`, 'totales');
+    add('surface', p.surface && `${fmt.format(p.surface)} m²`, '');
     add('rooms', p.rooms, p.rooms === 1 ? 'ambiente' : 'ambientes');
     add('bedrooms', p.bedrooms, p.bedrooms === 1 ? 'dormitorio' : 'dormitorios');
     add('bathrooms', p.bathrooms, p.bathrooms === 1 ? 'baño' : 'baños');

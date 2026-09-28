@@ -12,7 +12,7 @@ const raw = {
   publication_title: '<b>Depto</b> 3 amb&nbsp;Palermo',
   type: { name: 'Departamento' },
   fake_address: 'Gorriti 4800',
-  location: { name: 'Palermo', short_location: 'Capital Federal | Palermo' },
+  location: { name: 'Belen De Escobar', short_location: 'G.B.A. Zona Norte | Escobar | Belen De Escobar' },
   operations: [
     { operation_type: 'Venta', prices: [{ currency: 'USD', price: 145000 }] },
     { operation_type: 'Alquiler', prices: [{ currency: 'ARS', price: 0 }] },
@@ -33,6 +33,7 @@ test('normaliza una propiedad de Tokko', () => {
   assert.equal(p.title, 'Depto 3 amb Palermo');
   assert.equal(p.code, 'ABC123');
   assert.equal(p.surface, 78);
+  assert.equal(p.location, 'Belen De Escobar, Escobar');
   assert.deepEqual(p.photos, ['a.jpg', 'b.jpg']);
   assert.deepEqual(p.operations[0], { type: 'Venta', currency: 'USD', price: 145000, period: null });
   assert.equal(p.operations[1].price, null);

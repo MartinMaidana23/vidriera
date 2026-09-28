@@ -46,6 +46,16 @@ function cleanText(text) {
     .trim();
 }
 
+// "G.B.A. Zona Norte | Escobar | Belen De Escobar" -> "Belen De Escobar, Escobar"
+function shortLocation(location) {
+  const parts = String(location?.short_location || location?.full_location || '')
+    .split('|')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (parts.length === 0) return location?.name || '';
+  return parts.slice(-2).reverse().filter((s, i, arr) => arr.indexOf(s) === i).join(', ');
+}
+
 // Convierte una propiedad cruda de Tokko al formato que usa la cartelera.
 function normalizeProperty(p) {
   const operations = (p.operations || []).map((op) => {
@@ -79,7 +89,7 @@ function normalizeProperty(p) {
     title: cleanText(p.publication_title) || [p.type?.name, p.location?.name].filter(Boolean).join(' en '),
     type: p.type?.name || '',
     address: p.fake_address || p.address || '',
-    location: p.location?.short_location || p.location?.name || '',
+    location: shortLocation(p.location),
     operations,
     rooms: num(p.room_amount),
     bedrooms: num(p.suite_amount),
