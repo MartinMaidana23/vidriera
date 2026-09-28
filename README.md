@@ -46,6 +46,21 @@ En Tokko Broker: **Configuración → Permisos → API key** (hace falta un usua
 Sólo se muestran propiedades con al menos una foto. Si en Tokko una propiedad tiene
 "mostrar precio en la web" desactivado, aparece como **Consultar precio**.
 
+## Publicación en GitHub Pages (recomendado para Smart TV)
+
+La cartelera se publica sola en `https://<usuario>.github.io/vidriera/` y se actualiza
+con los datos de Tokko cada 15 minutos, sin tener una computadora prendida.
+La tarea está en `.github/workflows/cartelera.yml` (ahí también se configura qué mostrar).
+
+Configuración única en GitHub:
+
+1. **Settings → Secrets and variables → Actions → New repository secret**:
+   nombre `TOKKO_API_KEY`, valor la API key de Tokko. Queda secreta: no se publica.
+2. **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+3. **Actions → Cartelera → Run workflow** para la primera publicación.
+
+Localmente, `npm run build` genera la misma versión estática en `dist/`.
+
 ## En la TV
 
 Opciones habituales:
@@ -60,7 +75,9 @@ La página se recarga sola cada 6 horas para funcionar estable varios días segu
 ## Estructura
 
 ```
-server.js         Servidor HTTP: API interna + archivos estáticos + caché
+server.js         Servidor HTTP local: datos + archivos estáticos + caché
+scripts/build.js  Genera la versión estática para GitHub Pages
+src/data.js       Carga y filtrado de datos (compartido por server y build)
 src/tokko.js      Cliente de la API de Tokko, normalización y filtros
 src/config.js     Lectura de .env
 src/demo.js       Datos e imágenes de ejemplo para el modo demo
@@ -68,4 +85,4 @@ public/           Cartelera (HTML, CSS y JS del navegador)
 test/             Tests (`npm test`)
 ```
 
-Endpoints: `/api/properties`, `/api/config` y `/health` (estado de la última actualización).
+Rutas: `data/properties.json`, `data/config.json` y, en el servidor local, `/health`.

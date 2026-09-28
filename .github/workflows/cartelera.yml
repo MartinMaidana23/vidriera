@@ -1,0 +1,66 @@
+# Publica la cartelera en GitHub Pages y la actualiza con los datos de Tokko cada 15 minutos.
+# Requiere el secreto TOKKO_API_KEY (Settings > Secrets and variables > Actions)
+# y GitHub Pages con origen "GitHub Actions" (Settings > Pages).
+name: Cartelera
+
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/15 * * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  # Qué mostrar (ver README para todas las opciones)
+  ONLY_FEATURED: 'true'
+  OPERATION: todas
+  PROPERTY_TYPES: ''
+  MAX_PROPERTIES: '40'
+  SORT: recientes
+  SLIDE_SECONDS: '12'
+  PHOTOS_PER_PROPERTY: '4'
+  ACCENT_COLOR: '#e4002b'
+  # Vacíos = se toman de la sucursal en Tokko
+  AGENCY_NAME: ''
+  AGENCY_PHONE: ''
+  AGENCY_WEBSITE: ''
+  AGENCY_LOGO_URL: ''
+
+jobs:
+  publicar:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+      - name: Generar cartelera con datos de Tokko
+        run: node scripts/build.js
+        env:
+          TOKKO_API_KEY: ${{ secrets.TOKKO_API_KEY }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deploy
+        uses: actions/deploy-pages@v4
+      # GitHub pausa las tareas programadas de repos sin actividad por 60 días;
+      # esto la mantiene activa para que la cartelera se siga actualizando.
+      - name: Mantener activa la actualización automática
+        if: github.event_name == 'schedule'
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/cartelera.yml/enable"
+        env:
+          GH_TOKEN: ${{ github.token }}

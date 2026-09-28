@@ -4,8 +4,8 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const { loadDotEnv, loadConfig, rootDir } = require('./src/config');
-const { fetchTokkoProperties, normalizeProperty, selectProperties, extractAgency } = require('./src/tokko');
-const { demoRawProperties, demoPhotoSvg } = require('./src/demo');
+const { loadData, displayConfig } = require('./src/data');
+const { demoPhotoSvg } = require('./src/demo');
 
 loadDotEnv(path.join(rootDir, '.env'));
 const config = loadConfig();
@@ -19,12 +19,12 @@ async function refresh() {
   if (cache.loading) return cache.loading;
   cache.loading = (async () => {
     try {
-      const raw = demoMode ? demoRawProperties() : await fetchTokkoProperties(config.tokkoApiKey);
-      cache.properties = selectProperties(raw.map(normalizeProperty), config);
-      cache.agency = extractAgency(raw) || cache.agency;
+      const data = await loadData(config);
+      cache.properties = data.properties;
+      cache.agency = data.agency || cache.agency;
       cache.updatedAt = new Date().toISOString();
       cache.lastError = null;
-      console.log(`[${cache.updatedAt}] ${cache.properties.length} propiedades cargadas (${raw.length} en total)`);
+      console.log(`[${cache.updatedAt}] ${cache.properties.length} propiedades cargadas (${data.total} en total)`);
     } catch (err) {
       cache.lastError = err.message;
       console.error(`[${new Date().toISOString()}] Error al actualizar desde Tokko: ${err.message}`);
@@ -80,7 +80,8 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (pathname === '/api/properties') {
+  // Mismas rutas que genera scripts/build.js para la versión publicada en GitHub Pages.
+  if (pathname === '/data/properties.json') {
     if (!cache.updatedAt) await refresh();
     sendJson(res, cache.updatedAt ? 200 : 502, {
       demo: demoMode,
@@ -91,20 +92,9 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  if (pathname === '/api/config') {
+  if (pathname === '/data/config.json') {
     if (!cache.updatedAt) await refresh();
-    // Lo que esté en .env tiene prioridad; si falta, se usa lo cargado en Tokko.
-    const d = config.display;
-    const agency = cache.agency || {};
-    sendJson(res, 200, {
-      ...d,
-      agencyName: d.agencyName || agency.name || 'Mi Inmobiliaria',
-      agencyPhone: d.agencyPhone || agency.phone || '',
-      agencyWebsite: d.agencyWebsite || agency.email || '',
-      agencyLogoUrl: d.agencyLogoUrl || agency.logoUrl || '',
-      demo: demoMode,
-      refreshMinutes: config.refreshMinutes,
-    });
+    sendJson(res, 200, displayConfig(config, cache.agency, demoMode));
     return;
   }
 

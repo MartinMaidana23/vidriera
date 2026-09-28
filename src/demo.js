@@ -54,6 +54,7 @@ function demoRawProperties() {
     location: { name: location, short_location: `Capital Federal | ${location}` },
     operations: [{ operation_type: op, prices: [{ currency, price, period: op === 'Alquiler' ? 'mensual' : null }] }],
     web_price: i !== 1,
+    is_starred_on_web: true,
     room_amount: rooms,
     suite_amount: bedrooms,
     bathroom_amount: baths,
@@ -62,7 +63,7 @@ function demoRawProperties() {
     roofed_surface: roofed,
     description: desc,
     photos: [0, 1, 2].map((k) => ({
-      image: `/demo/photo/${i * 3 + k}.svg`,
+      image: `demo/photo/${i * 3 + k}.svg`,
       is_front_cover: k === 0,
       order: k,
     })),

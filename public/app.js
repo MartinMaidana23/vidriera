@@ -3,7 +3,7 @@
 (() => {
   const $ = (id) => document.getElementById(id);
   const stage = $('stage');
-  const photoEls = [...document.querySelectorAll('.photo')];
+  const photoEls = Array.prototype.slice.call(document.querySelectorAll('.photo'));
 
   // Recarga completa periódica para que la TV no acumule memoria después de días prendida.
   const FULL_RELOAD_MS = 6 * 60 * 60 * 1000;
@@ -51,7 +51,7 @@
   };
 
   function escapeHtml(s) {
-    return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
   function featuresHtml(p) {
@@ -157,7 +157,7 @@
 
     // Puntos indicadores de fotos
     $('photo-count').innerHTML = photos.length > 1 ? photos.map(() => '<span></span>').join('') : '';
-    const dots = [...$('photo-count').children];
+    const dots = Array.prototype.slice.call($('photo-count').children);
 
     photos.forEach((src, i) => {
       timers.push(setTimeout(async () => {
@@ -192,14 +192,14 @@
 
   // ---------- Datos ----------
   async function getJson(url) {
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await fetch(url + '?t=' + Date.now(), { cache: 'no-store' });
     const body = await res.json();
     if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
     return body;
   }
 
   async function loadConfig() {
-    config = { ...config, ...(await getJson('/api/config')) };
+    config = Object.assign({}, config, await getJson('data/config.json'));
     document.documentElement.style.setProperty('--accent', config.accentColor);
     $('agency-name').textContent = config.agencyName;
     $('agency-phone').textContent = config.agencyPhone;
@@ -213,7 +213,7 @@
 
   async function loadProperties() {
     try {
-      const data = await getJson('/api/properties');
+      const data = await getJson('data/properties.json');
       return data.properties || [];
     } catch (err) {
       console.error('No se pudieron obtener las propiedades:', err);

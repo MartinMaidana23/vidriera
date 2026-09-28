@@ -35,14 +35,20 @@ html, body {
 /* ---------- Fotos ---------- */
 .photos {
   position: absolute;
-  inset: 0 700px 110px 0;
+  top: 0;
+  right: 700px;
+  bottom: 110px;
+  left: 0;
   overflow: hidden;
   background: #000;
 }
 
 .photo {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -65,10 +71,10 @@ html, body {
   right: 28px;
   bottom: 24px;
   display: flex;
-  gap: 10px;
 }
 
 .photo-count span {
+  margin-left: 10px;
   width: 14px;
   height: 14px;
   border-radius: 50%;
@@ -98,7 +104,8 @@ html, body {
   transform: translateX(30px);
 }
 
-.badges { display: flex; gap: 14px; margin-bottom: 30px; }
+.badges { display: flex; margin-bottom: 30px; }
+.badges .badge + .badge { margin-left: 14px; }
 
 .badge {
   padding: 10px 22px;
@@ -158,9 +165,10 @@ html, body {
 .features li {
   display: flex;
   align-items: center;
-  gap: 16px;
   font-size: 32px;
 }
+
+.features li svg { margin-right: 16px; }
 
 .features svg {
   flex: none;
@@ -203,7 +211,6 @@ html, body {
   height: 110px;
   display: flex;
   align-items: center;
-  gap: 50px;
   padding: 0 50px;
   background: var(--footer-bg);
   font-size: 32px;
@@ -224,7 +231,8 @@ html, body {
   background: var(--accent);
 }
 
-.brand { display: flex; align-items: center; gap: 22px; }
+.brand { display: flex; align-items: center; margin-right: 50px; }
+.brand .logo { margin-right: 22px; }
 .logo {
   max-height: 80px;
   max-width: 280px;
@@ -238,9 +246,10 @@ html, body {
 .contact {
   flex: 1;
   display: flex;
-  gap: 50px;
   color: var(--muted);
 }
+
+.contact span + span { margin-left: 50px; }
 
 .contact span:empty { display: none; }
 
@@ -268,12 +277,14 @@ html, body {
 
 .overlay {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 40px;
   background: var(--panel-bg);
   font-size: 40px;
   color: var(--muted);
@@ -283,6 +294,7 @@ html, body {
 .overlay.gone { opacity: 0; pointer-events: none; }
 
 .spinner {
+  margin-bottom: 40px;
   width: 90px;
   height: 90px;
   border: 8px solid rgba(255, 255, 255, .15);
