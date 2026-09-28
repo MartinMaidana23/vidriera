@@ -57,6 +57,7 @@ jobs:
         run: node scripts/build.js
         env:
           TOKKO_API_KEY: ${{ secrets.TOKKO_API_KEY }}
+          LOGO_DEBUG: '1'
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

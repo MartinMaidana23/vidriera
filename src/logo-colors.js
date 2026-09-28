@@ -104,11 +104,16 @@ function brandColors(rgbaIterator) {
     e.n++; e.r += r; e.g += g; e.b += b;
     buckets.set(key, e);
   }
-  const colors = [...buckets.values()]
+  const all = [...buckets.values()]
     .map((e) => ({ rgb: [e.r / e.n, e.g / e.n, e.b / e.n], n: e.n }))
     .map((c) => ({ ...c, ...hsl(c.rgb) }))
-    .filter((c) => c.s > 0.25 && c.l > 0.08 && c.l < 0.92)
     .sort((a, b) => b.n - a.n);
+  const total = all.reduce((s, c) => s + c.n, 0) || 1;
+  if (process.env.LOGO_DEBUG) {
+    console.log('Colores más frecuentes del logo:', all.slice(0, 10)
+      .map((c) => `${toHex(c.rgb)} ${(100 * c.n / total).toFixed(1)}% (s=${c.s.toFixed(2)} l=${c.l.toFixed(2)})`).join(' | '));
+  }
+  const colors = all.filter((c) => c.s > 0.25 && c.l > 0.08 && c.l < 0.92);
 
   // Fusiona tonos casi iguales para quedarse con colores distintos entre sí.
   const distinct = [];
