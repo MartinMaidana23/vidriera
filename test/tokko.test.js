@@ -99,7 +99,22 @@ test('pagina la API de Tokko hasta total_count', async () => {
 
 test('informa errores HTTP de Tokko', async () => {
   const fakeFetch = async () => ({ ok: false, status: 401, statusText: 'Unauthorized' });
-  await assert.rejects(fetchTokkoProperties('MAL', { fetchImpl: fakeFetch }), /401/);
+  await assert.rejects(fetchTokkoProperties('MAL', { fetchImpl: fakeFetch, retryDelaysMs: [0] }), /401/);
+});
+
+test('reintenta cuando Tokko falla momentáneamente', async () => {
+  let calls = 0;
+  const fakeFetch = async () => {
+    calls++;
+    if (calls < 3) return { ok: false, status: 502, statusText: 'Bad Gateway' };
+    return { ok: true, json: async () => ({ meta: { total_count: 1 }, objects: [{ id: 1 }] }) };
+  };
+  const all = await fetchTokkoProperties('KEY', { fetchImpl: fakeFetch, retryDelaysMs: [0, 0, 0] });
+  assert.equal(all.length, 1);
+  assert.equal(calls, 3);
+
+  const alwaysDown = async () => ({ ok: false, status: 502, statusText: 'Bad Gateway' });
+  await assert.rejects(fetchTokkoProperties('KEY', { fetchImpl: alwaysDown, retryDelaysMs: [0, 0] }), /502/);
 });
 
 test('toma los datos de la inmobiliaria de la sucursal de Tokko', () => {

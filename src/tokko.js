@@ -7,7 +7,29 @@ const MAX_PAGES = 20;
 const MIN_REAL_PRICE = 1000;
 
 // Descarga todas las propiedades de la cuenta paginando la API de Tokko.
-async function fetchTokkoProperties(apiKey, { fetchImpl = fetch } = {}) {
+// Tokko a veces responde 5xx por unos segundos: se reintenta antes de dar error.
+async function fetchWithRetry(url, fetchImpl, retryDelaysMs) {
+  for (let attempt = 0; ; attempt++) {
+    let res = null;
+    let error = null;
+    try {
+      res = await fetchImpl(url, {
+        headers: { Accept: 'application/json' },
+        signal: AbortSignal.timeout(30_000),
+      });
+    } catch (err) {
+      error = err;
+    }
+    const retriable = error || res.status >= 500 || res.status === 429;
+    if (!retriable || attempt >= retryDelaysMs.length) {
+      if (error) throw error;
+      return res;
+    }
+    await new Promise((resolve) => setTimeout(resolve, retryDelaysMs[attempt]));
+  }
+}
+
+async function fetchTokkoProperties(apiKey, { fetchImpl = fetch, retryDelaysMs = [5_000, 15_000, 30_000] } = {}) {
   const all = [];
   for (let page = 0; page < MAX_PAGES; page++) {
     const url = new URL(TOKKO_BASE);
@@ -17,10 +39,7 @@ async function fetchTokkoProperties(apiKey, { fetchImpl = fetch } = {}) {
     url.searchParams.set('limit', String(PAGE_SIZE));
     url.searchParams.set('offset', String(page * PAGE_SIZE));
 
-    const res = await fetchImpl(url, {
-      headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(30_000),
-    });
+    const res = await fetchWithRetry(url, fetchImpl, retryDelaysMs);
     if (!res.ok) {
       throw new Error(`Tokko respondió ${res.status} ${res.statusText}`);
     }
