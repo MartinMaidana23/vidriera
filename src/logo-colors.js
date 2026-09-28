@@ -93,11 +93,13 @@ function hsl([r, g, b]) {
   return { h: (h + 360) % 360, s, l };
 }
 
-// Agrupa los píxeles en colores parecidos y devuelve los de marca (sin blancos ni grises),
-// ordenados por cuánto aparecen.
-function brandColors(rgbaIterator) {
+// Agrupa los píxeles en colores parecidos y devuelve los colores del logo ordenados
+// por cuánto aparecen, más qué parte del logo es opaca (para saber si tiene fondo propio).
+function analyzeLogo(rgbaIterator) {
   const buckets = new Map();
+  let pixels = 0;
   for (const [r, g, b, a] of rgbaIterator()) {
+    pixels++;
     if (a < 128) continue;
     const key = (r >> 4) << 8 | (g >> 4) << 4 | (b >> 4);
     const e = buckets.get(key) || { n: 0, r: 0, g: 0, b: 0 };
@@ -113,23 +115,35 @@ function brandColors(rgbaIterator) {
     console.log('Colores más frecuentes del logo:', all.slice(0, 10)
       .map((c) => `${toHex(c.rgb)} ${(100 * c.n / total).toFixed(1)}% (s=${c.s.toFixed(2)} l=${c.l.toFixed(2)})`).join(' | '));
   }
-  const colors = all.filter((c) => c.s > 0.25 && c.l > 0.08 && c.l < 0.92);
+  // Colores de marca: todos los que ocupan una parte visible del logo, incluidos
+  // grises, negros y cremas (hay logos monocromáticos).
+  const colors = all.filter((c) => c.n / total >= 0.01);
 
   // Fusiona tonos casi iguales para quedarse con colores distintos entre sí.
   const distinct = [];
+  const similar = (a, b) => {
+    if (Math.abs(a.l - b.l) >= 0.2) return false;
+    if (a.s < 0.15 && b.s < 0.15) return true; // grises: el tono no importa
+    return Math.min(Math.abs(a.h - b.h), 360 - Math.abs(a.h - b.h)) < 25;
+  };
   for (const c of colors) {
-    const same = distinct.find((d) => Math.min(Math.abs(d.h - c.h), 360 - Math.abs(d.h - c.h)) < 25 && Math.abs(d.l - c.l) < 0.25);
+    const same = distinct.find((d) => similar(d, c));
     if (same) same.n += c.n;
     else distinct.push({ ...c });
   }
-  return distinct.sort((a, b) => b.n - a.n).map((c) => ({ hex: toHex(c.rgb), l: c.l, share: c.n }));
+  return {
+    palette: distinct
+      .sort((a, b) => b.n - a.n)
+      .map((c) => ({ hex: toHex(c.rgb), s: c.s, l: c.l, share: c.n / total })),
+    opaqueRatio: pixels ? total / pixels : 0,
+  };
 }
 
 async function logoColors(url, { fetchImpl = fetch } = {}) {
   const res = await fetchImpl(url, { signal: AbortSignal.timeout(20_000) });
   if (!res.ok) throw new Error(`Logo: HTTP ${res.status}`);
   const buf = Buffer.from(await res.arrayBuffer());
-  return brandColors(decodePng(buf));
+  return analyzeLogo(decodePng(buf));
 }
 
-module.exports = { logoColors, decodePng, brandColors };
+module.exports = { logoColors, decodePng, analyzeLogo };

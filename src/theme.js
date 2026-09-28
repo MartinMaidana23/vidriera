@@ -2,11 +2,18 @@
 
 // Arma la paleta de la cartelera a partir de los colores del logo.
 // La pantalla es oscura (se lee mejor de lejos), así que:
-//  - el color de acento tiene que verse sobre fondo oscuro;
-//  - el fondo del panel es el color de marca oscurecido;
-//  - la etiqueta "Apto crédito" usa el segundo color de marca.
+//  - el fondo del panel es el color oscuro de la marca (o el principal oscurecido);
+//  - el acento tiene que verse bien sobre ese fondo;
+//  - los textos sobre el acento son claros u oscuros según haga falta.
 
-const DEFAULTS = { accentColor: '#e4002b', panelColor: '#101418', creditColor: '#1f9d55' };
+const DEFAULTS = {
+  accentColor: '#e4002b',
+  accentText: '#ffffff',
+  panelColor: '#101418',
+  creditColor: '#1f9d55',
+  creditText: '#ffffff',
+  logoBackground: '#ffffff',
+};
 
 function parse(hex) {
   const n = parseInt(hex.slice(1), 16);
@@ -30,23 +37,60 @@ function luminance(hex) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-// Aclara un color hasta que tenga contraste suficiente sobre el fondo oscuro.
-function readableOnDark(hex) {
+function contrast(a, b) {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+// Aclara un color hasta que tenga contraste suficiente sobre el fondo.
+function readableOn(hex, background) {
   let c = hex;
-  for (let i = 0; i < 10 && luminance(c) < 0.12; i++) c = mix(c, '#ffffff', 0.85);
+  for (let i = 0; i < 12 && contrast(c, background) < 3; i++) c = mix(c, '#ffffff', 0.85);
   return c;
 }
 
-function themeFromLogo(palette) {
+function textOn(hex, dark) {
+  return contrast('#ffffff', hex) >= contrast(dark, hex) ? '#ffffff' : dark;
+}
+
+// palette: [{ hex, s, l, share }] ordenada por presencia en el logo.
+// opaqueRatio: qué parte del logo es opaca (≈1 si el logo tiene fondo propio).
+function themeFromLogo(palette, opaqueRatio = 0) {
   if (!palette || palette.length === 0) return { ...DEFAULTS };
-  const primary = palette[0].hex;
-  const secondary = palette[1]?.hex;
-  const accentSource = luminance(primary) >= 0.12 || !secondary ? primary : secondary;
+
+  const vivid = palette.filter((c) => c.s > 0.25 && c.l > 0.08 && c.l < 0.92);
+  const darks = palette.filter((c) => c.l < 0.3);
+  const lights = palette.filter((c) => c.l > 0.7);
+
+  let panelColor;
+  let accentSource;
+  let creditSource;
+  if (vivid.length > 0) {
+    // Logo con colores: el principal da el acento y un tono oscuro de él, el fondo.
+    const primary = vivid[0].hex;
+    const secondary = vivid[1]?.hex;
+    panelColor = darks[0] ? mix(darks[0].hex, '#0b0d10', 0.7) : mix(primary, '#0b0d10', 0.18);
+    accentSource = luminance(primary) >= 0.12 || !secondary ? primary : secondary;
+    creditSource = secondary && secondary !== accentSource ? secondary : accentSource;
+  } else {
+    // Logo monocromático (ej. gris carbón y crema): fondo oscuro de la marca y acento claro.
+    panelColor = darks[0] ? darks[0].hex : DEFAULTS.panelColor;
+    accentSource = lights[0] ? lights[0].hex : '#ffffff';
+    creditSource = accentSource;
+  }
+
+  const accentColor = readableOn(accentSource, panelColor);
+  const creditColor = readableOn(creditSource, panelColor);
+  const dark = mix(panelColor, '#000000', 0.8);
   return {
-    accentColor: readableOnDark(accentSource),
-    panelColor: mix(primary, '#0b0d10', luminance(primary) < 0.05 ? 0.55 : 0.18),
-    creditColor: readableOnDark(secondary && secondary !== accentSource ? secondary : primary),
+    accentColor,
+    accentText: textOn(accentColor, dark),
+    panelColor,
+    creditColor,
+    creditText: textOn(creditColor, dark),
+    // Si el logo tiene fondo propio se muestra tal cual; si es transparente, sobre un recuadro claro.
+    logoBackground: opaqueRatio > 0.9 ? 'transparent' : '#ffffff',
   };
 }
 
-module.exports = { themeFromLogo, luminance };
+module.exports = { themeFromLogo, luminance, contrast, textOn };

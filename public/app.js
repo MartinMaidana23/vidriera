@@ -237,7 +237,10 @@
     config = Object.assign({}, config, await getJson('data/config.json'));
     const root = document.documentElement.style;
     if (config.accentColor) root.setProperty('--accent', config.accentColor);
+    if (config.accentText) root.setProperty('--accent-text', config.accentText);
     if (config.creditColor) root.setProperty('--credit', config.creditColor);
+    if (config.creditText) root.setProperty('--credit-text', config.creditText);
+    if (config.logoBackground) root.setProperty('--logo-bg', config.logoBackground);
     if (config.panelColor) {
       root.setProperty('--panel-bg', config.panelColor);
       root.setProperty('--footer-bg', shade(config.panelColor, 0.55));

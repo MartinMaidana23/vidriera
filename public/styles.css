@@ -2,7 +2,10 @@
    para ocupar la pantalla, así se ve igual en cualquier TV 16:9. */
 :root {
   --accent: #e4002b;
+  --accent-text: #ffffff;
   --credit: #1f9d55;
+  --credit-text: #ffffff;
+  --logo-bg: #ffffff;
   --panel-bg: #101418;
   --panel-fg: #f4f5f7;
   --muted: #9aa3ad;
@@ -117,7 +120,7 @@ html, body {
   text-transform: uppercase;
 }
 
-.badge-op { background: var(--accent); color: #fff; }
+.badge-op { background: var(--accent); color: var(--accent-text); }
 .badge-type { background: rgba(255, 255, 255, .1); color: var(--panel-fg); }
 .badge:empty { display: none; }
 
@@ -221,7 +224,7 @@ html, body {
   padding: 18px 34px;
   border-radius: 10px;
   background: var(--credit);
-  color: #fff;
+  color: var(--credit-text);
   font-size: 40px;
   font-weight: 800;
   letter-spacing: .04em;
@@ -282,7 +285,7 @@ html, body {
   max-width: 280px;
   padding: 8px 16px;
   border-radius: 8px;
-  background: #fff;
+  background: var(--logo-bg);
   object-fit: contain;
 }
 .agency-name { font-size: 36px; font-weight: 700; }
