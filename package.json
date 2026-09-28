@@ -1,0 +1,14 @@
+{
+  "name": "vidriera",
+  "version": "1.0.0",
+  "description": "Cartelera virtual de propiedades para TV de vidriera, alimentada por la API de Tokko Broker",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

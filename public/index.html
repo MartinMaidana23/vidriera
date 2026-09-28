@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cartelera de propiedades</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div id="stage" class="stage">
+    <div class="photos">
+      <img class="photo" alt="">
+      <img class="photo" alt="">
+      <div class="photo-count" id="photo-count"></div>
+    </div>
+
+    <section class="panel" id="panel">
+      <div class="badges">
+        <span class="badge badge-op" id="op"></span>
+        <span class="badge badge-type" id="type"></span>
+      </div>
+      <h1 class="title" id="title"></h1>
+      <p class="location" id="location"></p>
+      <div class="price" id="price"></div>
+      <ul class="features" id="features"></ul>
+      <p class="description" id="description"></p>
+      <p class="code" id="code"></p>
+    </section>
+
+    <footer class="footer">
+      <div class="progress"><div class="progress-bar" id="progress"></div></div>
+      <div class="brand">
+        <img id="logo" class="logo" alt="" hidden>
+        <span id="agency-name" class="agency-name"></span>
+      </div>
+      <div class="contact">
+        <span id="agency-phone"></span>
+        <span id="agency-web"></span>
+      </div>
+      <div class="clock" id="clock"></div>
+    </footer>
+
+    <div class="demo-ribbon" id="demo" hidden>MODO DEMO</div>
+
+    <div class="overlay" id="overlay">
+      <div class="spinner"></div>
+      <p id="overlay-text">Cargando propiedades…</p>
+    </div>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

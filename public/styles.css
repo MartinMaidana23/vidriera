@@ -1,0 +1,287 @@
+/* La cartelera se diseña sobre un lienzo fijo de 1920x1080 y se escala
+   para ocupar la pantalla, así se ve igual en cualquier TV 16:9. */
+:root {
+  --accent: #e4002b;
+  --panel-bg: #101418;
+  --panel-fg: #f4f5f7;
+  --muted: #9aa3ad;
+  --footer-bg: #07090b;
+  --fade: 900ms;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  cursor: none;
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--panel-fg);
+}
+
+.stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: center center;
+  background: var(--panel-bg);
+  overflow: hidden;
+}
+
+/* ---------- Fotos ---------- */
+.photos {
+  position: absolute;
+  inset: 0 700px 110px 0;
+  overflow: hidden;
+  background: #000;
+}
+
+.photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity var(--fade) ease-in-out;
+}
+
+.photo.visible {
+  opacity: 1;
+  animation: kenburns var(--photo-seconds, 6s) linear forwards;
+}
+
+@keyframes kenburns {
+  from { transform: scale(1.0); }
+  to   { transform: scale(1.08) translate(-1%, -1%); }
+}
+
+.photo-count {
+  position: absolute;
+  right: 28px;
+  bottom: 24px;
+  display: flex;
+  gap: 10px;
+}
+
+.photo-count span {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .45);
+  transition: background .3s;
+}
+
+.photo-count span.on { background: #fff; }
+
+/* ---------- Panel de datos ---------- */
+.panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 110px;
+  width: 700px;
+  padding: 64px 60px 48px;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-bg);
+  border-left: 8px solid var(--accent);
+  transition: opacity var(--fade) ease-in-out, transform var(--fade) ease-in-out;
+}
+
+.panel.hidden {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.badges { display: flex; gap: 14px; margin-bottom: 30px; }
+
+.badge {
+  padding: 10px 22px;
+  border-radius: 6px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.badge-op { background: var(--accent); color: #fff; }
+.badge-type { background: rgba(255, 255, 255, .1); color: var(--panel-fg); }
+.badge:empty { display: none; }
+
+.title {
+  font-size: 52px;
+  line-height: 1.12;
+  font-weight: 700;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.location {
+  margin-top: 18px;
+  font-size: 30px;
+  color: var(--muted);
+}
+
+.price {
+  margin-top: 36px;
+  font-size: 76px;
+  font-weight: 800;
+  line-height: 1.05;
+  color: #fff;
+}
+
+.price small {
+  display: block;
+  margin-top: 8px;
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.price .consult { font-size: 58px; }
+
+.features {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 22px 30px;
+  margin-top: 44px;
+}
+
+.features li {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 32px;
+}
+
+.features svg {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  stroke: var(--accent);
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.features b { font-weight: 700; }
+
+.description {
+  margin-top: auto;
+  padding-top: 30px;
+  font-size: 26px;
+  line-height: 1.4;
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.code {
+  margin-top: 18px;
+  font-size: 22px;
+  color: var(--muted);
+  letter-spacing: .06em;
+}
+
+/* ---------- Pie ---------- */
+.footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 110px;
+  display: flex;
+  align-items: center;
+  gap: 50px;
+  padding: 0 50px;
+  background: var(--footer-bg);
+  font-size: 32px;
+}
+
+.progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: rgba(255, 255, 255, .08);
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+}
+
+.brand { display: flex; align-items: center; gap: 22px; }
+.logo { max-height: 70px; max-width: 260px; object-fit: contain; }
+.agency-name { font-size: 36px; font-weight: 700; }
+
+.contact {
+  flex: 1;
+  display: flex;
+  gap: 50px;
+  color: var(--muted);
+}
+
+.contact span:empty { display: none; }
+
+.clock {
+  font-size: 40px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Estados ---------- */
+.demo-ribbon {
+  position: absolute;
+  top: 34px;
+  left: -60px;
+  width: 280px;
+  padding: 8px 0;
+  transform: rotate(-35deg);
+  background: #f6c700;
+  color: #000;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: .1em;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  background: var(--panel-bg);
+  font-size: 40px;
+  color: var(--muted);
+  transition: opacity .6s;
+}
+
+.overlay.gone { opacity: 0; pointer-events: none; }
+
+.spinner {
+  width: 90px;
+  height: 90px;
+  border: 8px solid rgba(255, 255, 255, .15);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
