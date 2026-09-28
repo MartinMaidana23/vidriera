@@ -250,8 +250,17 @@
     $('agency-web').textContent = config.agencyWebsite;
     $('demo').hidden = !config.demo;
     if (config.agencyLogoUrl) {
-      $('logo').src = config.agencyLogoUrl;
-      $('logo').hidden = false;
+      const logo = $('logo');
+      logo.onload = function () { logo.parentNode.className += ' has-logo'; };
+      logo.src = config.agencyLogoUrl;
+      logo.hidden = false;
+      if (config.logoBackground === 'transparent') logo.className += ' transparent';
+      $('overlay-logo').src = config.agencyLogoUrl;
+      $('overlay-logo').hidden = false;
+    }
+    if (config.isoUrl) {
+      $('iso').src = config.isoUrl;
+      $('iso').hidden = false;
     }
   }
 

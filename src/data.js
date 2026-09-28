@@ -2,7 +2,10 @@
 
 const { fetchTokkoProperties, normalizeProperty, selectProperties, extractAgency } = require('./tokko');
 const { demoRawProperties } = require('./demo');
-const { logoColors } = require('./logo-colors');
+const fs = require('node:fs');
+const path = require('node:path');
+const { rootDir } = require('./config');
+const { logoColors, analyzeLogo, decodePng } = require('./logo-colors');
 const { themeFromLogo, textOn } = require('./theme');
 
 // Descarga (o genera en modo demo) y filtra las propiedades a mostrar.
@@ -13,9 +16,11 @@ async function loadData(config) {
 
   const logoUrl = config.display.agencyLogoUrl || agency?.logoUrl;
   let logo = { palette: [], opaqueRatio: 0 };
-  if (logoUrl && /^https?:/.test(logoUrl)) {
+  if (logoUrl) {
     try {
-      logo = await logoColors(logoUrl);
+      logo = /^https?:/.test(logoUrl)
+        ? await logoColors(logoUrl)
+        : analyzeLogo(decodePng(fs.readFileSync(path.join(rootDir, 'public', logoUrl.replace(/^\/+/, '')))));
       console.log(`Colores del logo: ${logo.palette.map((c) => `${c.hex} ${(c.share * 100).toFixed(0)}%`).join(', ') || '(ninguno)'}`);
     } catch (err) {
       console.error(`No se pudieron leer los colores del logo: ${err.message}`);

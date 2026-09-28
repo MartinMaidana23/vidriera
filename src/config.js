@@ -55,6 +55,8 @@ function loadConfig(env = process.env) {
       agencyPhone: env.AGENCY_PHONE || '',
       agencyWebsite: env.AGENCY_WEBSITE || '',
       agencyLogoUrl: env.AGENCY_LOGO_URL || '',
+      // Isotipo (símbolo) que se muestra como marca en la esquina de las fotos
+      isoUrl: env.ISO_URL || '',
       // Vacíos = se toman del logo de la inmobiliaria
       accentColor: color(env.ACCENT_COLOR),
       panelColor: color(env.PANEL_COLOR),

@@ -53,10 +53,18 @@ function textOn(hex, dark) {
   return contrast('#ffffff', hex) >= contrast(dark, hex) ? '#ffffff' : dark;
 }
 
+// El logo se muestra tal cual si tiene fondo propio o si es claro (se lee sobre el fondo
+// oscuro); sólo un logo transparente y oscuro necesita un recuadro blanco.
+function logoBackground(palette, opaqueRatio) {
+  if (opaqueRatio > 0.9) return 'transparent';
+  return palette[0] && palette[0].l > 0.5 ? 'transparent' : '#ffffff';
+}
+
 // palette: [{ hex, s, l, share }] ordenada por presencia en el logo.
 // opaqueRatio: qué parte del logo es opaca (≈1 si el logo tiene fondo propio).
 function themeFromLogo(palette, opaqueRatio = 0) {
   if (!palette || palette.length === 0) return { ...DEFAULTS };
+  const bg = logoBackground(palette, opaqueRatio);
 
   const vivid = palette.filter((c) => c.s > 0.25 && c.l > 0.08 && c.l < 0.92);
   const darks = palette.filter((c) => c.l < 0.3);
@@ -88,8 +96,7 @@ function themeFromLogo(palette, opaqueRatio = 0) {
     panelColor,
     creditColor,
     creditText: textOn(creditColor, dark),
-    // Si el logo tiene fondo propio se muestra tal cual; si es transparente, sobre un recuadro claro.
-    logoBackground: opaqueRatio > 0.9 ? 'transparent' : '#ffffff',
+    logoBackground: bg,
   };
 }
 

@@ -40,7 +40,8 @@ En Tokko Broker: **Configuración → Permisos → API key** (hace falta un usua
 | `SLIDE_SECONDS` | Segundos por propiedad | `12` |
 | `PHOTOS_PER_PROPERTY` | Fotos que rotan por propiedad | `4` |
 | `AGENCY_NAME`, `AGENCY_PHONE`, `AGENCY_WEBSITE` | Pie de pantalla | datos de la sucursal en Tokko |
-| `AGENCY_LOGO_URL` | URL del logo (o dejar `public/logo.png` y poner `/logo.png`) | logo de la sucursal en Tokko |
+| `AGENCY_LOGO_URL` | URL del logo (o dejar `public/logo.png` y poner `logo.png`) | logo de la sucursal en Tokko |
+| `ISO_URL` | Isotipo que se muestra en la esquina de las fotos (ej. `iso.png`) | no se muestra |
 | `WEBSITE_URL` | Web a la que lleva el QR de cada propiedad | ficha pública de Tokko |
 | `ACCENT_COLOR`, `PANEL_COLOR`, `CREDIT_COLOR` | Colores (acento, fondo del panel, etiqueta "Apto crédito") | tomados del logo |
 

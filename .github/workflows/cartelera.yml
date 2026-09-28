@@ -38,7 +38,9 @@ env:
   AGENCY_NAME: ''
   AGENCY_PHONE: ''
   AGENCY_WEBSITE: www.maidanapropiedades.com.ar
-  AGENCY_LOGO_URL: ''
+  # Archivos dentro de public/
+  AGENCY_LOGO_URL: logo.png
+  ISO_URL: iso.png
 
 jobs:
   publicar:
