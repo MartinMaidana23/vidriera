@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { normalizeProperty, selectProperties, fetchTokkoProperties } = require('../src/tokko');
+const { normalizeProperty, selectProperties, fetchTokkoProperties, extractAgency } = require('../src/tokko');
 const { loadConfig } = require('../src/config');
 const { demoRawProperties } = require('../src/demo');
 
@@ -89,4 +89,11 @@ test('pagina la API de Tokko hasta total_count', async () => {
 test('informa errores HTTP de Tokko', async () => {
   const fakeFetch = async () => ({ ok: false, status: 401, statusText: 'Unauthorized' });
   await assert.rejects(fetchTokkoProperties('MAL', { fetchImpl: fakeFetch }), /401/);
+});
+
+test('toma los datos de la inmobiliaria de la sucursal de Tokko', () => {
+  const branch = { id: 7, display_name: 'Maidana propiedades', phone_area: '348', phone: '4312950', email: 'info@x.com', logo: 'logo.png' };
+  const agency = extractAgency([{ branch }, { branch }, { branch: { id: 8, name: 'Otra' } }]);
+  assert.deepEqual(agency, { name: 'Maidana propiedades', phone: '(348) 431-2950', email: 'info@x.com', logoUrl: 'logo.png' });
+  assert.equal(extractAgency([{}]), null);
 });

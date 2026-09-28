@@ -4,7 +4,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const { loadDotEnv, loadConfig, rootDir } = require('./src/config');
-const { fetchTokkoProperties, normalizeProperty, selectProperties } = require('./src/tokko');
+const { fetchTokkoProperties, normalizeProperty, selectProperties, extractAgency } = require('./src/tokko');
 const { demoRawProperties, demoPhotoSvg } = require('./src/demo');
 
 loadDotEnv(path.join(rootDir, '.env'));
@@ -13,7 +13,7 @@ const demoMode = !config.tokkoApiKey;
 const publicDir = path.join(rootDir, 'public');
 
 // Caché en memoria: si Tokko falla, se siguen mostrando las últimas propiedades obtenidas.
-const cache = { properties: [], updatedAt: null, lastError: null, loading: null };
+const cache = { properties: [], agency: null, updatedAt: null, lastError: null, loading: null };
 
 async function refresh() {
   if (cache.loading) return cache.loading;
@@ -21,6 +21,7 @@ async function refresh() {
     try {
       const raw = demoMode ? demoRawProperties() : await fetchTokkoProperties(config.tokkoApiKey);
       cache.properties = selectProperties(raw.map(normalizeProperty), config);
+      cache.agency = extractAgency(raw) || cache.agency;
       cache.updatedAt = new Date().toISOString();
       cache.lastError = null;
       console.log(`[${cache.updatedAt}] ${cache.properties.length} propiedades cargadas (${raw.length} en total)`);
@@ -91,7 +92,19 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (pathname === '/api/config') {
-    sendJson(res, 200, { ...config.display, demo: demoMode, refreshMinutes: config.refreshMinutes });
+    if (!cache.updatedAt) await refresh();
+    // Lo que esté en .env tiene prioridad; si falta, se usa lo cargado en Tokko.
+    const d = config.display;
+    const agency = cache.agency || {};
+    sendJson(res, 200, {
+      ...d,
+      agencyName: d.agencyName || agency.name || 'Mi Inmobiliaria',
+      agencyPhone: d.agencyPhone || agency.phone || '',
+      agencyWebsite: d.agencyWebsite || agency.email || '',
+      agencyLogoUrl: d.agencyLogoUrl || agency.logoUrl || '',
+      demo: demoMode,
+      refreshMinutes: config.refreshMinutes,
+    });
     return;
   }
 

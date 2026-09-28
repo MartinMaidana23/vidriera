@@ -38,8 +38,8 @@ En Tokko Broker: **Configuración → Permisos → API key** (hace falta un usua
 | `ONLY_WITH_PRICE` | Omitir las que tienen precio "a consultar" | `false` |
 | `SLIDE_SECONDS` | Segundos por propiedad | `12` |
 | `PHOTOS_PER_PROPERTY` | Fotos que rotan por propiedad | `4` |
-| `AGENCY_NAME`, `AGENCY_PHONE`, `AGENCY_WEBSITE` | Pie de pantalla | |
-| `AGENCY_LOGO_URL` | URL del logo (o dejar `public/logo.png` y poner `/logo.png`) | |
+| `AGENCY_NAME`, `AGENCY_PHONE`, `AGENCY_WEBSITE` | Pie de pantalla | datos de la sucursal en Tokko |
+| `AGENCY_LOGO_URL` | URL del logo (o dejar `public/logo.png` y poner `/logo.png`) | logo de la sucursal en Tokko |
 | `ACCENT_COLOR` | Color principal | `#e4002b` |
 
 Sólo se muestran propiedades con al menos una foto. Si en Tokko una propiedad tiene

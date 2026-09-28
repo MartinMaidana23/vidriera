@@ -147,4 +147,33 @@ function selectProperties(properties, config) {
   return result.slice(0, config.maxProperties);
 }
 
-module.exports = { fetchTokkoProperties, normalizeProperty, selectProperties };
+// Datos de la inmobiliaria tomados de la sucursal (branch) que más propiedades tiene.
+function extractAgency(rawProperties) {
+  const counts = new Map();
+  for (const p of rawProperties) {
+    if (!p.branch?.id) continue;
+    const entry = counts.get(p.branch.id) || { branch: p.branch, n: 0 };
+    entry.n++;
+    counts.set(p.branch.id, entry);
+  }
+  const top = [...counts.values()].sort((a, b) => b.n - a.n)[0];
+  if (!top) return null;
+  const b = top.branch;
+  return {
+    name: b.display_name || b.name || '',
+    phone: formatPhone(b.phone_area, b.phone),
+    email: b.email || '',
+    logoUrl: b.logo || '',
+  };
+}
+
+// ("348", "4312950") -> "(348) 431-2950"
+function formatPhone(area, number) {
+  const n = String(number || '').replace(/\D/g, '');
+  if (!n) return '';
+  const pretty = n.length > 4 ? `${n.slice(0, -4)}-${n.slice(-4)}` : n;
+  const a = String(area || '').replace(/\D/g, '');
+  return a ? `(${a}) ${pretty}` : pretty;
+}
+
+module.exports = { fetchTokkoProperties, normalizeProperty, selectProperties, extractAgency };

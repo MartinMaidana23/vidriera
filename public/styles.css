@@ -225,7 +225,14 @@ html, body {
 }
 
 .brand { display: flex; align-items: center; gap: 22px; }
-.logo { max-height: 70px; max-width: 260px; object-fit: contain; }
+.logo {
+  max-height: 80px;
+  max-width: 280px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: #fff;
+  object-fit: contain;
+}
 .agency-name { font-size: 36px; font-weight: 700; }
 
 .contact {

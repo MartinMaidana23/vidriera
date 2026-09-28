@@ -44,7 +44,7 @@ function loadConfig(env = process.env) {
     display: {
       slideSeconds: int(env.SLIDE_SECONDS, 12, 3),
       photosPerProperty: int(env.PHOTOS_PER_PROPERTY, 4),
-      agencyName: env.AGENCY_NAME || 'Mi Inmobiliaria',
+      agencyName: env.AGENCY_NAME || '',
       agencyPhone: env.AGENCY_PHONE || '',
       agencyWebsite: env.AGENCY_WEBSITE || '',
       agencyLogoUrl: env.AGENCY_LOGO_URL || '',
