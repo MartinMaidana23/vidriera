@@ -13,6 +13,9 @@ const { demoPhotoSvg } = require('../src/demo');
 async function main() {
   loadDotEnv(path.join(rootDir, '.env'));
   const config = loadConfig();
+  if (process.env.CI && !config.tokkoApiKey) {
+    throw new Error('Falta el secreto TOKKO_API_KEY en GitHub; no se publica el modo demo.');
+  }
   const dist = path.join(rootDir, 'dist');
 
   const data = await loadData(config);
