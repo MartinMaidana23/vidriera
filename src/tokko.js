@@ -4,6 +4,7 @@ const TOKKO_BASE = 'https://www.tokkobroker.com/api/v1/property/';
 const PAGE_SIZE = 50;
 // Tope de seguridad para no recorrer carteras enormes en cada actualización.
 const MAX_PAGES = 20;
+const MIN_REAL_PRICE = 1000;
 
 // Descarga todas las propiedades de la cuenta paginando la API de Tokko.
 async function fetchTokkoProperties(apiKey, { fetchImpl = fetch } = {}) {
@@ -69,8 +70,9 @@ function normalizeProperty(p) {
   });
 
   // Tokko marca con web_price=false las propiedades con precio "a consultar".
-  if (p.web_price === false) {
-    for (const op of operations) op.price = null;
+  // Los precios simbólicos (USD 1, USD 16...) también se muestran como "a consultar".
+  for (const op of operations) {
+    if (p.web_price === false || (op.price && op.price < MIN_REAL_PRICE)) op.price = null;
   }
 
   const photos = (p.photos || [])
@@ -85,7 +87,9 @@ function normalizeProperty(p) {
 
   return {
     id: p.id,
-    code: p.reference_code || '',
+    // Algunos códigos traen el del portal pegado: "MMD-183::ZP-M-565" -> "MMD-183"
+    code: String(p.reference_code || '').split('::')[0],
+    featured: Boolean(p.is_starred_on_web),
     title: cleanText(p.publication_title) || [p.type?.name, p.location?.name].filter(Boolean).join(' en '),
     type: p.type?.name || '',
     address: p.fake_address || p.address || '',
@@ -118,6 +122,7 @@ function selectProperties(properties, config) {
 
   let result = properties
     .filter((p) => p.photos.length > 0)
+    .filter((p) => !config.onlyFeatured || p.featured)
     .map((p) => {
       if (!wantedOp) return p;
       return { ...p, operations: p.operations.filter((op) => op.type.toLowerCase() === wantedOp) };

@@ -8,7 +8,8 @@ const { demoRawProperties } = require('../src/demo');
 
 const raw = {
   id: 1,
-  reference_code: 'ABC123',
+  reference_code: 'ABC123::ZP-M-999',
+  is_starred_on_web: true,
   publication_title: '<b>Depto</b> 3 amb&nbsp;Palermo',
   type: { name: 'Departamento' },
   fake_address: 'Gorriti 4800',
@@ -32,11 +33,17 @@ test('normaliza una propiedad de Tokko', () => {
   const p = normalizeProperty(raw);
   assert.equal(p.title, 'Depto 3 amb Palermo');
   assert.equal(p.code, 'ABC123');
+  assert.equal(p.featured, true);
   assert.equal(p.surface, 78);
   assert.equal(p.location, 'Belen De Escobar, Escobar');
   assert.deepEqual(p.photos, ['a.jpg', 'b.jpg']);
   assert.deepEqual(p.operations[0], { type: 'Venta', currency: 'USD', price: 145000, period: null });
   assert.equal(p.operations[1].price, null);
+});
+
+test('los precios simbólicos se muestran como a consultar', () => {
+  const p = normalizeProperty({ ...raw, operations: [{ operation_type: 'Venta', prices: [{ currency: 'USD', price: 16 }] }] });
+  assert.equal(p.operations[0].price, null);
 });
 
 test('web_price=false oculta el precio', () => {
@@ -63,6 +70,10 @@ test('filtra por operación, tipo y precio', () => {
   assert.deepEqual(prices, [...prices].sort((a, b) => a - b));
 
   assert.equal(selectProperties(props, { ...base, maxProperties: 2 }).length, 2);
+
+  const featured = normalizeProperty(raw);
+  const plain = { ...featured, id: 2, featured: false };
+  assert.deepEqual(selectProperties([featured, plain], { ...base, onlyFeatured: true }).map((p) => p.id), [1]);
 });
 
 test('descarta propiedades sin fotos', () => {

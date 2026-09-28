@@ -35,6 +35,7 @@ En Tokko Broker: **Configuración → Permisos → API key** (hace falta un usua
 | `PROPERTY_TYPES` | Tipos separados por coma, ej. `Departamento,Casa,PH` | todos |
 | `MAX_PROPERTIES` | Máximo de propiedades en la rotación | `40` |
 | `SORT` | `recientes`, `precio_asc`, `precio_desc`, `aleatorio` | `recientes` |
+| `ONLY_FEATURED` | Sólo las propiedades destacadas en la web en Tokko | `false` |
 | `ONLY_WITH_PRICE` | Omitir las que tienen precio "a consultar" | `false` |
 | `SLIDE_SECONDS` | Segundos por propiedad | `12` |
 | `PHOTOS_PER_PROPERTY` | Fotos que rotan por propiedad | `4` |

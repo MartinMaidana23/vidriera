@@ -41,6 +41,7 @@ function loadConfig(env = process.env) {
     maxProperties: int(env.MAX_PROPERTIES, 40),
     sort: (env.SORT || 'recientes').trim().toLowerCase(),
     onlyWithPrice: /^(1|true|si|sí|yes)$/i.test(env.ONLY_WITH_PRICE || ''),
+    onlyFeatured: /^(1|true|si|sí|yes)$/i.test(env.ONLY_FEATURED || ''),
     display: {
       slideSeconds: int(env.SLIDE_SECONDS, 12, 3),
       photosPerProperty: int(env.PHOTOS_PER_PROPERTY, 4),
