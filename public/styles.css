@@ -108,8 +108,9 @@ html, body {
   transform: translateX(30px);
 }
 
-.badges { display: flex; margin-bottom: 30px; }
-.badges .badge + .badge { margin-left: 14px; }
+/* Si las dos etiquetas no entran en una línea, la segunda baja */
+.badges { display: flex; flex-wrap: wrap; margin-bottom: 18px; }
+.badges .badge { margin: 0 14px 12px 0; }
 
 .badge {
   padding: 10px 22px;

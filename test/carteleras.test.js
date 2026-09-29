@@ -73,3 +73,10 @@ test('una fecha de entrega vencida no se anuncia', () => {
   assert.equal(deliveryLabel('2026-09-01', now), 'Septiembre 2026');
   assert.equal(deliveryLabel(null, now), '');
 });
+
+test('emprendimientos: el precio es un anticipo y se presentan como desarrollos en pozo', () => {
+  const units = [normalizeProperty(prop(1, { development: { id: 7 } }))];
+  const d = normalizeDevelopment({ id: 7, name: 'Solara', photos: photo }, units);
+  assert.equal(d.fromLabel, 'Anticipo desde');
+  assert.equal(d.operations[0].type, 'Desarrollos en pozo');
+});

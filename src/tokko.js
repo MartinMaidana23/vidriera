@@ -262,11 +262,11 @@ function normalizeDevelopment(d, units, { now } = {}) {
     featured: Boolean(d.is_starred_on_web),
     title: cleanText(d.name) || cleanText(d.publication_title),
     type: unitsLabel || d.type?.name || '',
-    // "Lotes desde USD 6.600" / "Unidades desde USD 30.900"
-    fromLabel: unitsLabel === 'Lotes' ? 'Lotes desde' : 'Unidades desde',
+    // Los precios de las unidades de los emprendimientos son anticipos.
+    fromLabel: 'Anticipo desde',
     address: String(d.fake_address || d.address || '').trim(),
     location: shortLocation(d.location),
-    operations: [{ type: 'Emprendimiento', currency: currency || '', price: minPrice, period: null, from: true }],
+    operations: [{ type: 'Desarrollos en pozo', currency: currency || '', price: minPrice, period: null, from: true }],
     units: own.length,
     roomsMin: rooms.length ? Math.min(...rooms) : null,
     roomsMax: rooms.length ? Math.max(...rooms) : null,
