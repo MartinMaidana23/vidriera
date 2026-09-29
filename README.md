@@ -51,6 +51,20 @@ Cada propiedad muestra un QR que lleva a su página, y las marcadas en Tokko com
 Sólo se muestran propiedades con al menos una foto. Si en Tokko una propiedad tiene
 "mostrar precio en la web" desactivado, aparece como **Consultar precio**.
 
+## Varias carteleras
+
+`carteleras.json` define las carteleras; cada una se publica en su propia dirección:
+
+| Ruta | Cartelera | Qué muestra |
+|---|---|---|
+| `/` | Destacadas | Propiedades marcadas "Destacada en la web" en Tokko |
+| `/credito/` | Apto crédito | Propiedades marcadas "Apto crédito" |
+| `/emprendimientos/` | Emprendimientos | Emprendimientos de Tokko (salvo QUO Maschwitz y QUO Loma Verde), con precio "desde" de sus unidades, entrega, amenities y financiación |
+
+Filtros disponibles por cartelera: `soloDestacadas`, `soloAptoCredito`, `operacion`, `tipos`,
+`orden`, `maximo`, `conPrecio` y, para emprendimientos, `excluir` (nombres). Lo que no se indique
+se toma de la configuración general (`.env` o el workflow).
+
 ## Publicación en GitHub Pages (recomendado para Smart TV)
 
 La cartelera se publica sola en `https://<usuario>.github.io/vidriera/` y se actualiza

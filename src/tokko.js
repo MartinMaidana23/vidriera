@@ -1,6 +1,6 @@
 'use strict';
 
-const TOKKO_BASE = 'https://www.tokkobroker.com/api/v1/property/';
+const TOKKO_API = 'https://www.tokkobroker.com/api/v1/';
 const PAGE_SIZE = 50;
 // Tope de seguridad para no recorrer carteras enormes en cada actualización.
 const MAX_PAGES = 20;
@@ -29,10 +29,11 @@ async function fetchWithRetry(url, fetchImpl, retryDelaysMs) {
   }
 }
 
-async function fetchTokkoProperties(apiKey, { fetchImpl = fetch, retryDelaysMs = [5_000, 15_000, 30_000] } = {}) {
+// Descarga todos los objetos de un listado de la API (property, development) paginando.
+async function fetchTokkoList(resource, apiKey, { fetchImpl = fetch, retryDelaysMs = [5_000, 15_000, 30_000] } = {}) {
   const all = [];
   for (let page = 0; page < MAX_PAGES; page++) {
-    const url = new URL(TOKKO_BASE);
+    const url = new URL(`${resource}/`, TOKKO_API);
     url.searchParams.set('key', apiKey);
     url.searchParams.set('format', 'json');
     url.searchParams.set('lang', 'es_ar');
@@ -52,6 +53,9 @@ async function fetchTokkoProperties(apiKey, { fetchImpl = fetch, retryDelaysMs =
   }
   return all;
 }
+
+const fetchTokkoProperties = (apiKey, opts) => fetchTokkoList('property', apiKey, opts);
+const fetchTokkoDevelopments = (apiKey, opts) => fetchTokkoList('development', apiKey, opts);
 
 function num(value) {
   const n = Number(value);
@@ -79,9 +83,21 @@ function shortLocation(location) {
   const parts = String(location?.short_location || location?.full_location || '')
     .split('|')
     .map((s) => s.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    // Regiones demasiado generales para una vidriera de barrio
+    .filter((s, i, arr) => arr.length === 1 || !/^(argentina|g\.?b\.?a\.?\b|capital federal)/i.test(s));
   if (parts.length === 0) return location?.name || '';
   return parts.slice(-2).reverse().filter((s, i, arr) => arr.indexOf(s) === i).join(', ');
+}
+
+function sortPhotos(photos) {
+  return (photos || [])
+    .filter((ph) => ph && ph.image && !ph.is_blueprint)
+    .sort((a, b) => {
+      if (a.is_front_cover !== b.is_front_cover) return a.is_front_cover ? -1 : 1;
+      return (a.order ?? 0) - (b.order ?? 0);
+    })
+    .map((ph) => ph.image);
 }
 
 // Convierte una propiedad cruda de Tokko al formato que usa la cartelera.
@@ -102,13 +118,7 @@ function normalizeProperty(p) {
     if (p.web_price === false || (op.price && op.price < MIN_REAL_PRICE)) op.price = null;
   }
 
-  const photos = (p.photos || [])
-    .filter((ph) => ph && ph.image && !ph.is_blueprint)
-    .sort((a, b) => {
-      if (a.is_front_cover !== b.is_front_cover) return a.is_front_cover ? -1 : 1;
-      return (a.order ?? 0) - (b.order ?? 0);
-    })
-    .map((ph) => ph.image);
+  const photos = sortPhotos(p.photos);
 
   const surface = num(p.total_surface) || num(p.surface) || num(p.roofed_surface);
 
@@ -130,6 +140,8 @@ function normalizeProperty(p) {
     roofedSurface: num(p.roofed_surface),
     description: cleanText(p.description).slice(0, 280),
     creditEligible: /^apto/i.test(String(p.credit_eligible || '')),
+    stamp: /^apto/i.test(String(p.credit_eligible || '')) ? '✓ Apto crédito' : '',
+    developmentId: p.development?.id || null,
     publicUrl: p.public_url || '',
     // Parte final de la URL de la web de la inmobiliaria (sitio web de Tokko):
     // /p/8448707-Local-en-Alquiler-en-Belen-De-Escobar-Sarmiento-al-400
@@ -155,6 +167,7 @@ function selectProperties(properties, config) {
   let result = properties
     .filter((p) => p.photos.length > 0)
     .filter((p) => !config.onlyFeatured || p.featured)
+    .filter((p) => !config.onlyCreditEligible || p.creditEligible)
     .map((p) => {
       if (!wantedOp) return p;
       return { ...p, operations: p.operations.filter((op) => op.type.toLowerCase() === wantedOp) };
@@ -182,6 +195,99 @@ function selectProperties(properties, config) {
   }
 
   return result.slice(0, config.maxProperties);
+}
+
+// Amenities que vale la pena anunciar, en orden de importancia (nombre de etiqueta en Tokko -> texto).
+const AMENITIES = [
+  { label: 'Pileta', tags: ['pileta', 'pileta comunitaria', 'pileta descubierta', 'pileta cubierta'] },
+  { label: 'Gimnasio', tags: ['gimnasio'] },
+  { label: 'SUM', tags: ['sum'] },
+  { label: 'Solarium', tags: ['solarium'] },
+  { label: 'Parrilla', tags: ['parrilla', 'zona de parrillas', 'parrilla techada', 'parrilla individual en departamento'] },
+  { label: 'Seguridad', tags: ['seguridad 24hs', 'seguridad'] },
+  { label: 'Club House', tags: ['club house'] },
+  { label: 'Cancha de fútbol', tags: ['cancha de futbol'] },
+  { label: 'Espacios verdes', tags: ['zonas verdes', 'area recreativa'] },
+  { label: 'Ascensor', tags: ['ascensor'] },
+];
+
+const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto',
+  'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+const UNIT_PLURALS = { departamento: 'Departamentos', terreno: 'Lotes', local: 'Locales', casa: 'Casas',
+  oficina: 'Oficinas', cochera: 'Cocheras', ph: 'PH', 'galpón': 'Galpones' };
+
+function comparable(text) {
+  return String(text || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+}
+
+// "2028-10-01" -> "Octubre 2028" (sólo si la fecha no pasó: una entrega vencida no se anuncia)
+function deliveryLabel(date, now = new Date()) {
+  const m = /^(\d{4})-(\d{2})/.exec(String(date || ''));
+  if (!m) return '';
+  const year = Number(m[1]), month = Number(m[2]);
+  if (year * 12 + month < now.getFullYear() * 12 + now.getMonth() + 1) return '';
+  return `${MONTHS[month - 1]} ${year}`;
+}
+
+// Convierte un emprendimiento de Tokko en una "placa" de la cartelera, resumiendo sus
+// unidades a la venta (propiedades de Tokko vinculadas al emprendimiento).
+function normalizeDevelopment(d, units, { now } = {}) {
+  const own = units.filter((u) => u.developmentId === d.id);
+
+  // Precio "desde": el menor de las unidades, en la moneda que más usan.
+  const prices = own.flatMap((u) => u.operations.filter((op) => op.price).map((op) => op));
+  const byCurrency = {};
+  for (const op of prices) (byCurrency[op.currency] = byCurrency[op.currency] || []).push(op.price);
+  const currency = Object.keys(byCurrency).sort((a, b) => byCurrency[b].length - byCurrency[a].length)[0];
+  const minPrice = currency ? Math.min(...byCurrency[currency]) : null;
+
+  const rooms = own.map((u) => u.rooms).filter(Boolean);
+  const typeCounts = {};
+  for (const u of own) typeCounts[u.type] = (typeCounts[u.type] || 0) + 1;
+  const mainUnitType = Object.keys(typeCounts).sort((a, b) => typeCounts[b] - typeCounts[a])[0];
+
+  const tagNames = (d.tags || []).map((t) => comparable(t.name));
+  const amenities = AMENITIES.filter((a) => a.tags.some((t) => tagNames.includes(t)))
+    .map((a) => a.label)
+    .slice(0, 3);
+  const financing = cleanText(d.financing_details);
+
+  const unitsLabel = mainUnitType && UNIT_PLURALS[comparable(mainUnitType)];
+  return {
+    kind: 'development',
+    id: d.id,
+    name: d.name || '',
+    code: String(d.reference_code || '').split('::')[0],
+    featured: Boolean(d.is_starred_on_web),
+    title: cleanText(d.name) || cleanText(d.publication_title),
+    type: unitsLabel || d.type?.name || '',
+    // "Lotes desde USD 6.600" / "Unidades desde USD 30.900"
+    fromLabel: unitsLabel === 'Lotes' ? 'Lotes desde' : 'Unidades desde',
+    address: String(d.fake_address || d.address || '').trim(),
+    location: shortLocation(d.location),
+    operations: [{ type: 'Emprendimiento', currency: currency || '', price: minPrice, period: null, from: true }],
+    units: own.length,
+    roomsMin: rooms.length ? Math.min(...rooms) : null,
+    roomsMax: rooms.length ? Math.max(...rooms) : null,
+    delivery: deliveryLabel(d.construction_date, now),
+    amenities,
+    description: cleanText(d.description || d.publication_title).slice(0, 280),
+    creditEligible: false,
+    stamp: financing ? `Financiación: ${financing}` : '',
+    url: d.web_url || '',
+    photos: sortPhotos(d.photos),
+    createdAt: null,
+  };
+}
+
+function selectDevelopments(developments, config) {
+  const excluded = (config.exclude || []).map(comparable);
+  return developments
+    .filter((d) => d.photos.length > 0)
+    .filter((d) => !excluded.includes(comparable(d.name)))
+    .filter((d) => !config.onlyFeatured || d.featured)
+    .slice(0, config.maxProperties);
 }
 
 // Datos de la inmobiliaria tomados de la sucursal (branch) que más propiedades tiene.
@@ -213,4 +319,13 @@ function formatPhone(area, number) {
   return a ? `(${a}) ${pretty}` : pretty;
 }
 
-module.exports = { fetchTokkoProperties, normalizeProperty, selectProperties, extractAgency };
+module.exports = {
+  fetchTokkoProperties,
+  fetchTokkoDevelopments,
+  normalizeProperty,
+  normalizeDevelopment,
+  selectProperties,
+  selectDevelopments,
+  extractAgency,
+  deliveryLabel,
+};

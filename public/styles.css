@@ -95,7 +95,7 @@ html, body {
   right: 0;
   bottom: 110px;
   width: 700px;
-  padding: 64px 60px 48px;
+  padding: 52px 60px 40px;
   display: flex;
   flex-direction: column;
   background: var(--panel-bg);
@@ -124,12 +124,17 @@ html, body {
 .badge-type { background: rgba(255, 255, 255, .1); color: var(--panel-fg); }
 .badge:empty { display: none; }
 
+/* Nada del panel se achica salvo el bloque de abajo (la descripción se recorta sola),
+   así el título y el precio siempre se ven completos. */
+.panel > * { flex-shrink: 0; }
+
 .title {
+  padding-bottom: .08em;
   font-size: 52px;
   line-height: 1.12;
   font-weight: 700;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -158,6 +163,16 @@ html, body {
 
 .price .consult { font-size: 58px; }
 
+.price .price-from {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 .features {
   list-style: none;
   display: grid;
@@ -173,6 +188,7 @@ html, body {
 }
 
 .features li svg { margin-right: 16px; }
+.features.single { grid-template-columns: 1fr; gap: 16px; }
 
 .features svg {
   flex: none;
@@ -188,6 +204,8 @@ html, body {
 .features b { font-weight: 700; }
 
 .bottom {
+  flex-shrink: 1;
+  min-height: 0;
   margin-top: auto;
   padding-top: 30px;
   display: flex;
@@ -240,6 +258,8 @@ html, body {
   position: absolute;
   top: 40px;
   right: 40px;
+  max-width: 760px;
+  line-height: 1.15;
   padding: 18px 34px;
   border-radius: 10px;
   background: var(--credit);

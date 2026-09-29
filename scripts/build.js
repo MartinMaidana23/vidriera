@@ -1,13 +1,13 @@
 'use strict';
 
-// Genera la versión estática de la cartelera en dist/ para publicarla en GitHub Pages.
-// Consulta Tokko en el momento de construir y deja los datos en dist/data/*.json;
-// la API key nunca se copia a los archivos publicados.
+// Genera la versión estática de las carteleras en dist/ para publicarlas en GitHub Pages.
+// Consulta Tokko en el momento de construir y deja los datos de cada cartelera en
+// dist/<ruta>/data/*.json; la API key nunca se copia a los archivos publicados.
 
 const fs = require('node:fs');
 const path = require('node:path');
 const { loadDotEnv, loadConfig, rootDir } = require('../src/config');
-const { loadData, displayConfig } = require('../src/data');
+const { loadCarteleras, loadSources, buildSlides, displayConfig } = require('../src/data');
 const { demoPhotoSvg } = require('../src/demo');
 
 async function main() {
@@ -16,31 +16,40 @@ async function main() {
   if (process.env.CI && !config.tokkoApiKey) {
     throw new Error('Falta el secreto TOKKO_API_KEY en GitHub; no se publica el modo demo.');
   }
+  const carteleras = loadCarteleras(config);
+  const sources = await loadSources(config, carteleras);
+  if (sources.rawProperties.length === 0) {
+    throw new Error('Tokko no devolvió propiedades; se mantiene la versión publicada anterior.');
+  }
+
   const dist = path.join(rootDir, 'dist');
-
-  const data = await loadData(config);
-  if (!data.demo && data.properties.length === 0) {
-    throw new Error('Tokko no devolvió propiedades para mostrar; se mantiene la versión publicada anterior.');
-  }
-
   fs.rmSync(dist, { recursive: true, force: true });
-  fs.cpSync(path.join(rootDir, 'public'), dist, { recursive: true });
-  fs.mkdirSync(path.join(dist, 'data'));
-
   const updatedAt = new Date().toISOString();
-  fs.writeFileSync(
-    path.join(dist, 'data', 'properties.json'),
-    JSON.stringify({ demo: data.demo, updatedAt, error: null, properties: data.properties })
-  );
-  fs.writeFileSync(path.join(dist, 'data', 'config.json'), JSON.stringify(displayConfig(config, data.agency, data.demo, data.theme)));
 
-  if (data.demo) {
-    const photos = path.join(dist, 'demo', 'photo');
-    fs.mkdirSync(photos, { recursive: true });
-    for (let i = 0; i < 18; i++) fs.writeFileSync(path.join(photos, `${i}.svg`), demoPhotoSvg(i));
+  for (const cartelera of carteleras) {
+    const out = path.join(dist, cartelera.ruta);
+    fs.cpSync(path.join(rootDir, 'public'), out, { recursive: true });
+    fs.mkdirSync(path.join(out, 'data'), { recursive: true });
+
+    const slides = buildSlides(sources, cartelera);
+    fs.writeFileSync(
+      path.join(out, 'data', 'properties.json'),
+      JSON.stringify({ demo: sources.demo, updatedAt, error: null, properties: slides })
+    );
+    fs.writeFileSync(
+      path.join(out, 'data', 'config.json'),
+      JSON.stringify(displayConfig(cartelera.config, sources.agency, sources.demo, sources.theme))
+    );
+
+    if (sources.demo) {
+      const photos = path.join(out, 'demo', 'photo');
+      fs.mkdirSync(photos, { recursive: true });
+      for (let i = 0; i < 18; i++) fs.writeFileSync(path.join(photos, `${i}.svg`), demoPhotoSvg(i));
+    }
+    console.log(`/${cartelera.ruta}${cartelera.ruta ? '/' : ''} ${cartelera.nombre}: ${slides.length} placas`);
   }
 
-  console.log(`dist/ generado: ${data.properties.length} propiedades (${data.total} en Tokko)${data.demo ? ' [MODO DEMO]' : ''}`);
+  console.log(`dist/ generado (${sources.rawProperties.length} propiedades y ${sources.rawDevelopments.length} emprendimientos en Tokko)${sources.demo ? ' [MODO DEMO]' : ''}`);
 }
 
 main().catch((err) => {

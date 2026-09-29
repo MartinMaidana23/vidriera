@@ -1,4 +1,4 @@
-# Publica la cartelera en GitHub Pages y la actualiza con los datos de Tokko cada 15 minutos.
+# Publica las carteleras (ver carteleras.json) en GitHub Pages y la actualiza con los datos de Tokko cada 15 minutos.
 # Requiere el secreto TOKKO_API_KEY (Settings > Secrets and variables > Actions)
 # y GitHub Pages con origen "GitHub Actions" (Settings > Pages).
 name: Cartelera
@@ -20,8 +20,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Qué mostrar (ver README para todas las opciones)
-  ONLY_FEATURED: 'true'
+  # Qué muestra cada cartelera se define en carteleras.json; esto es lo general.
   OPERATION: todas
   PROPERTY_TYPES: ''
   MAX_PROPERTIES: '40'

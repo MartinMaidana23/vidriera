@@ -1,0 +1,23 @@
+{
+  "_ayuda": "Cada cartelera se publica en su propia dirección: <web>/vidriera/<ruta>/ (ruta vacía = la principal). tipo: propiedades | emprendimientos. Filtros opcionales: soloDestacadas, soloAptoCredito, operacion (venta | alquiler), tipos ([\"Casa\", \"PH\"]), orden (recientes | precio_asc | precio_desc | aleatorio), maximo, conPrecio, excluir ([nombres de emprendimientos]).",
+  "carteleras": [
+    {
+      "ruta": "",
+      "nombre": "Destacadas",
+      "tipo": "propiedades",
+      "soloDestacadas": true
+    },
+    {
+      "ruta": "credito",
+      "nombre": "Apto crédito",
+      "tipo": "propiedades",
+      "soloAptoCredito": true
+    },
+    {
+      "ruta": "emprendimientos",
+      "nombre": "Emprendimientos",
+      "tipo": "emprendimientos",
+      "excluir": ["QUO Maschwitz", "QUO Loma Verde"]
+    }
+  ]
+}

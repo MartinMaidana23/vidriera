@@ -34,12 +34,13 @@
   // ---------- Formato ----------
   const fmt = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
 
-  function formatPrice(op) {
+  function formatPrice(op, p) {
     if (!op || !op.price) return '<span class="consult">Consultar precio</span>';
     const currency = op.currency === 'ARS' ? '$' : op.currency;
+    const prefix = op.from ? `<span class="price-from">${escapeHtml(p.fromLabel || 'Desde')}</span>` : '';
     const isRent = /alquiler/i.test(op.type);
     const suffix = isRent ? '<small>por mes</small>' : '';
-    return `${currency} ${fmt.format(op.price)}${suffix}`;
+    return `${prefix}${currency} ${fmt.format(op.price)}${suffix}`;
   }
 
   const ICONS = {
@@ -48,6 +49,8 @@
     bathrooms: '<svg viewBox="0 0 24 24"><path d="M4 12h16v3a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4zM6 12V5a2 2 0 0 1 4 0M7 19l-1 2M17 19l1 2"/></svg>',
     surface: '<svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h4M3 15h4M9 3v4M15 3v4"/></svg>',
     parking: '<svg viewBox="0 0 24 24"><path d="M5 17h14v-5l-2-5H7l-2 5zM5 12h14"/><circle cx="8" cy="17" r="1.6"/><circle cx="16" cy="17" r="1.6"/></svg>',
+    delivery: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="1"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+    amenities: '<svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6-4.5-4.2 6.1-.7z"/></svg>',
   };
 
   function escapeHtml(s) {
@@ -59,6 +62,13 @@
     const add = (icon, value, label) => {
       if (value) items.push(`<li>${ICONS[icon]}<span><b>${escapeHtml(value)}</b> ${label}</span></li>`);
     };
+    if (p.kind === 'development') {
+      const rooms = p.roomsMin && (p.roomsMin === p.roomsMax ? `${p.roomsMin}` : `${p.roomsMin} a ${p.roomsMax}`);
+      add('rooms', rooms, p.roomsMax === 1 ? 'ambiente' : 'ambientes');
+      add('delivery', p.delivery && `Entrega ${p.delivery}`, '');
+      add('amenities', (p.amenities || []).join(' · '), '');
+      return items.join('');
+    }
     add('surface', p.surface && `${fmt.format(p.surface)} m²`, '');
     add('rooms', p.rooms, p.rooms === 1 ? 'ambiente' : 'ambientes');
     add('bedrooms', p.bedrooms, p.bedrooms === 1 ? 'dormitorio' : 'dormitorios');
@@ -171,12 +181,14 @@
       $('type').textContent = p.type;
       $('title').textContent = p.title;
       $('location').textContent = [p.address, p.location].filter(Boolean).join(' · ');
-      $('price').innerHTML = formatPrice(op);
+      $('price').innerHTML = formatPrice(op, p);
       $('features').innerHTML = featuresHtml(p);
+      $('features').className = p.kind === 'development' ? 'features single' : 'features';
       $('description').textContent = p.description;
       $('code').textContent = p.code ? `Cód. ${p.code}` : '';
       renderQr(p.url);
-      $('credit').hidden = !p.creditEligible;
+      $('credit').textContent = p.stamp || '';
+      $('credit').hidden = !p.stamp;
       panel.classList.remove('hidden');
     }, 450));
 

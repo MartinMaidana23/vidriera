@@ -4,28 +4,31 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const { loadDotEnv, loadConfig, rootDir } = require('./src/config');
-const { loadData, displayConfig } = require('./src/data');
+const { loadCarteleras, loadSources, buildSlides, displayConfig } = require('./src/data');
 const { demoPhotoSvg } = require('./src/demo');
 
 loadDotEnv(path.join(rootDir, '.env'));
 const config = loadConfig();
+const carteleras = loadCarteleras(config);
 const demoMode = !config.tokkoApiKey;
 const publicDir = path.join(rootDir, 'public');
 
-// Caché en memoria: si Tokko falla, se siguen mostrando las últimas propiedades obtenidas.
-const cache = { properties: [], agency: null, theme: null, updatedAt: null, lastError: null, loading: null };
+// Caché en memoria: si Tokko falla, se siguen mostrando los últimos datos obtenidos.
+const cache = { sources: null, slides: {}, updatedAt: null, lastError: null, loading: null };
 
 async function refresh() {
   if (cache.loading) return cache.loading;
   cache.loading = (async () => {
     try {
-      const data = await loadData(config);
-      cache.properties = data.properties;
-      cache.agency = data.agency || cache.agency;
-      cache.theme = data.theme;
+      const sources = await loadSources(config, carteleras);
+      const slides = {};
+      for (const c of carteleras) slides[c.ruta] = buildSlides(sources, c);
+      cache.sources = sources;
+      cache.slides = slides;
       cache.updatedAt = new Date().toISOString();
       cache.lastError = null;
-      console.log(`[${cache.updatedAt}] ${cache.properties.length} propiedades cargadas (${data.total} en total)`);
+      const summary = carteleras.map((c) => `${c.nombre}: ${slides[c.ruta].length}`).join(', ');
+      console.log(`[${cache.updatedAt}] ${summary}`);
     } catch (err) {
       cache.lastError = err.message;
       console.error(`[${new Date().toISOString()}] Error al actualizar desde Tokko: ${err.message}`);
@@ -73,6 +76,14 @@ function serveStatic(res, pathname) {
   });
 }
 
+// "/credito/data/config.json" -> { cartelera de "credito", resto: "/data/config.json" }
+function matchCartelera(pathname) {
+  const [, first = '', ...rest] = pathname.split('/');
+  const found = carteleras.find((c) => c.ruta && c.ruta === first);
+  if (found) return { cartelera: found, rest: '/' + rest.join('/') };
+  return { cartelera: carteleras.find((c) => c.ruta === '') || carteleras[0], rest: pathname };
+}
+
 const server = http.createServer(async (req, res) => {
   const { pathname } = new URL(req.url, 'http://localhost');
 
@@ -81,43 +92,53 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  if (pathname === '/health') {
+    const counts = Object.fromEntries(Object.entries(cache.slides).map(([k, v]) => [k || '/', v.length]));
+    sendJson(res, 200, { ok: true, updatedAt: cache.updatedAt, counts, error: cache.lastError });
+    return;
+  }
+
+  // Sin barra final las rutas relativas de la página no funcionan: /credito -> /credito/
+  if (carteleras.some((c) => c.ruta && pathname === `/${c.ruta}`)) {
+    res.writeHead(301, { Location: `${pathname}/` }).end();
+    return;
+  }
+
+  const { cartelera, rest } = matchCartelera(pathname);
+
   // Mismas rutas que genera scripts/build.js para la versión publicada en GitHub Pages.
-  if (pathname === '/data/properties.json') {
+  if (rest === '/data/properties.json') {
     if (!cache.updatedAt) await refresh();
     sendJson(res, cache.updatedAt ? 200 : 502, {
       demo: demoMode,
       updatedAt: cache.updatedAt,
       error: cache.lastError,
-      properties: cache.properties,
+      properties: cache.slides[cartelera.ruta] || [],
     });
     return;
   }
 
-  if (pathname === '/data/config.json') {
+  if (rest === '/data/config.json') {
     if (!cache.updatedAt) await refresh();
-    sendJson(res, 200, displayConfig(config, cache.agency, demoMode, cache.theme));
+    const s = cache.sources || {};
+    sendJson(res, 200, displayConfig(cartelera.config, s.agency, demoMode, s.theme));
     return;
   }
 
-  if (pathname === '/health') {
-    sendJson(res, 200, { ok: true, updatedAt: cache.updatedAt, count: cache.properties.length, error: cache.lastError });
-    return;
-  }
-
-  const demoPhoto = pathname.match(/^\/demo\/photo\/(\d+)\.svg$/);
+  const demoPhoto = rest.match(/^\/demo\/photo\/(\d+)\.svg$/);
   if (demoPhoto) {
     res.writeHead(200, { 'Content-Type': MIME['.svg'], 'Cache-Control': 'max-age=86400' });
     res.end(demoPhotoSvg(Number(demoPhoto[1])));
     return;
   }
 
-  serveStatic(res, decodeURIComponent(pathname));
+  serveStatic(res, decodeURIComponent(rest));
 });
 
 refresh();
 setInterval(refresh, config.refreshMinutes * 60_000).unref();
 
 server.listen(config.port, () => {
-  console.log(`Cartelera en http://localhost:${config.port}`);
+  for (const c of carteleras) console.log(`${c.nombre}: http://localhost:${config.port}/${c.ruta}${c.ruta ? '/' : ''}`);
   if (demoMode) console.log('MODO DEMO: no hay TOKKO_API_KEY en .env, se muestran propiedades de ejemplo.');
 });
