@@ -29,11 +29,18 @@
     : 'webkitTransform' in styleProbe ? 'webkitTransform'
       : 'msTransform' in styleProbe ? 'msTransform' : null;
 
+  // Algunas TV informan un tamaño (innerWidth) más grande que la parte que realmente
+  // se ve en pantalla (visualViewport): se usa la medida más chica que informen.
   function viewportSize() {
     const de = document.documentElement;
+    const vv = window.visualViewport;
+    const pick = function (values) {
+      const ok = values.filter(function (v) { return v > 0; });
+      return ok.length ? Math.min.apply(null, ok) : 0;
+    };
     return {
-      w: window.innerWidth || de.clientWidth || screen.width,
-      h: window.innerHeight || de.clientHeight || screen.height,
+      w: pick([window.innerWidth, de.clientWidth, vv && vv.width]) || screen.width,
+      h: pick([window.innerHeight, de.clientHeight, vv && vv.height]) || screen.height,
     };
   }
 
@@ -64,8 +71,15 @@
         box.style.cssText = 'position:fixed;left:0;top:0;z-index:99;padding:6px 10px;background:#000;color:#0f0;font:14px monospace';
         document.body.appendChild(box);
       }
-      box.textContent = 'Pantalla ' + vp.w + 'x' + vp.h + ' | escala ' + Math.round(scale * 100) +
-        '% | dpr ' + (window.devicePixelRatio || 1) + ' | ' + (transformProp || 'zoom');
+      const vv = window.visualViewport;
+      const de = document.documentElement;
+      box.textContent = 'usa ' + vp.w + 'x' + vp.h + ' escala ' + Math.round(scale * 100) + '%' +
+        ' | inner ' + window.innerWidth + 'x' + window.innerHeight +
+        ' | client ' + de.clientWidth + 'x' + de.clientHeight +
+        ' | visual ' + (vv ? Math.round(vv.width) + 'x' + Math.round(vv.height) + ' z' + vv.scale : 'no') +
+        ' | screen ' + screen.width + 'x' + screen.height +
+        ' | outer ' + window.outerWidth + 'x' + window.outerHeight +
+        ' | dpr ' + (window.devicePixelRatio || 1) + ' | ' + (transformProp || 'zoom');
     }
   }
   window.addEventListener('resize', fit);
