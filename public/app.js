@@ -59,6 +59,10 @@
     return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
+  function hasSplitSurfaces(p) {
+    return Boolean(p.landSurface && p.builtSurface);
+  }
+
   function featuresHtml(p) {
     const items = [];
     const add = (icon, value, label) => {
@@ -75,7 +79,8 @@
     const addArea = (icon, value, caption) => {
       if (value) items.push(`<li class="area">${ICONS[icon]}<span><b>${fmt.format(value)} m²</b><small>${caption}</small></span></li>`);
     };
-    if (config.splitSurfaces && (p.landSurface || p.builtSurface)) {
+    // Si Tokko tiene cargadas las dos superficies se muestran por separado.
+    if (hasSplitSurfaces(p)) {
       addArea('land', p.landSurface, 'de terreno');
       addArea('built', p.builtSurface, 'cubiertos');
     } else {
@@ -85,7 +90,7 @@
     add('bedrooms', p.bedrooms, p.bedrooms === 1 ? 'dormitorio' : 'dormitorios');
     add('bathrooms', p.bathrooms, p.bathrooms === 1 ? 'baño' : 'baños');
     add('parking', p.parking, p.parking === 1 ? 'cochera' : 'cocheras');
-    return items.slice(0, config.splitSurfaces ? 6 : 4).join('');
+    return items.slice(0, hasSplitSurfaces(p) ? 6 : 4).join('');
   }
 
   // ---------- QR ----------
@@ -195,7 +200,7 @@
       $('price').innerHTML = formatPrice(op, p);
       $('features').innerHTML = featuresHtml(p);
       $('features').className = p.kind === 'development' ? 'features single'
-        : config.splitSurfaces ? 'features compact' : 'features';
+        : hasSplitSurfaces(p) ? 'features compact' : 'features';
       $('description').textContent = p.description;
       $('code').textContent = p.code ? `Cód. ${p.code}` : '';
       renderQr(p.url);

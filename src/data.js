@@ -38,7 +38,6 @@ function loadCarteleras(config, file = path.join(rootDir, 'carteleras.json')) {
         sort: String(c.orden || config.sort).toLowerCase(),
         maxProperties: Number(c.maximo) > 0 ? Number(c.maximo) : config.maxProperties,
         exclude: Array.isArray(c.excluir) ? c.excluir : [],
-        splitSurfaces: Boolean(c.superficiesSeparadas),
       },
     };
   });
@@ -110,7 +109,6 @@ function displayConfig(config, agency, demo, theme) {
     creditColor: d.creditColor || t.creditColor,
     creditText: d.creditColor ? textOn(d.creditColor, '#111111') : t.creditText,
     logoBackground: t.logoBackground,
-    splitSurfaces: Boolean(config.splitSurfaces),
     demo,
     refreshMinutes: config.refreshMinutes,
   };

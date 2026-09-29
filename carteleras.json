@@ -1,5 +1,5 @@
 {
-  "_ayuda": "Cada cartelera se publica en su propia dirección: <web>/vidriera/<ruta>/ (ruta vacía = la principal). tipo: propiedades | emprendimientos. Filtros opcionales: soloDestacadas, soloAptoCredito, operacion (venta | alquiler), tipos ([\"Casa\", \"PH\"]), orden (recientes | precio_asc | precio_desc | aleatorio), maximo, conPrecio, superficiesSeparadas (terreno y cubierta por separado), excluir ([nombres de emprendimientos]).",
+  "_ayuda": "Cada cartelera se publica en su propia dirección: <web>/vidriera/<ruta>/ (ruta vacía = la principal). tipo: propiedades | emprendimientos. Filtros opcionales: soloDestacadas, soloAptoCredito, operacion (venta | alquiler), tipos ([\"Casa\", \"PH\"]), orden (recientes | precio_asc | precio_desc | aleatorio), maximo, conPrecio, excluir ([nombres de emprendimientos]).",
   "carteleras": [
     {
       "ruta": "",
@@ -11,8 +11,7 @@
       "ruta": "credito",
       "nombre": "Apto crédito",
       "tipo": "propiedades",
-      "soloAptoCredito": true,
-      "superficiesSeparadas": true
+      "soloAptoCredito": true
     },
     {
       "ruta": "emprendimientos",
