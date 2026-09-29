@@ -49,6 +49,8 @@
     bathrooms: '<svg viewBox="0 0 24 24"><path d="M4 12h16v3a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4zM6 12V5a2 2 0 0 1 4 0M7 19l-1 2M17 19l1 2"/></svg>',
     surface: '<svg viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 9h4M3 15h4M9 3v4M15 3v4"/></svg>',
     parking: '<svg viewBox="0 0 24 24"><path d="M5 17h14v-5l-2-5H7l-2 5zM5 12h14"/><circle cx="8" cy="17" r="1.6"/><circle cx="16" cy="17" r="1.6"/></svg>',
+    land: '<svg viewBox="0 0 24 24"><path d="M2 20l4-9h12l4 9z"/><path d="M12 15V4l5 2-5 2"/></svg>',
+    built: '<svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7M5 9.5V20h14V9.5M10 20v-5h4v5"/></svg>',
     delivery: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="1"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
     amenities: '<svg viewBox="0 0 24 24"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6-4.5-4.2 6.1-.7z"/></svg>',
   };
@@ -69,12 +71,21 @@
       add('amenities', (p.amenities || []).join(' · '), '');
       return items.join('');
     }
-    add('surface', p.surface && `${fmt.format(p.surface)} m²`, '');
+    // Superficies separadas: número grande y aclaración abajo ("de terreno" / "cubiertos")
+    const addArea = (icon, value, caption) => {
+      if (value) items.push(`<li class="area">${ICONS[icon]}<span><b>${fmt.format(value)} m²</b><small>${caption}</small></span></li>`);
+    };
+    if (config.splitSurfaces && (p.landSurface || p.builtSurface)) {
+      addArea('land', p.landSurface, 'de terreno');
+      addArea('built', p.builtSurface, 'cubiertos');
+    } else {
+      add('surface', p.surface && `${fmt.format(p.surface)} m²`, '');
+    }
     add('rooms', p.rooms, p.rooms === 1 ? 'ambiente' : 'ambientes');
     add('bedrooms', p.bedrooms, p.bedrooms === 1 ? 'dormitorio' : 'dormitorios');
     add('bathrooms', p.bathrooms, p.bathrooms === 1 ? 'baño' : 'baños');
     add('parking', p.parking, p.parking === 1 ? 'cochera' : 'cocheras');
-    return items.slice(0, 4).join('');
+    return items.slice(0, config.splitSurfaces ? 6 : 4).join('');
   }
 
   // ---------- QR ----------
@@ -183,7 +194,8 @@
       $('location').textContent = [p.address, p.location].filter(Boolean).join(' · ');
       $('price').innerHTML = formatPrice(op, p);
       $('features').innerHTML = featuresHtml(p);
-      $('features').className = p.kind === 'development' ? 'features single' : 'features';
+      $('features').className = p.kind === 'development' ? 'features single'
+        : config.splitSurfaces ? 'features compact' : 'features';
       $('description').textContent = p.description;
       $('code').textContent = p.code ? `Cód. ${p.code}` : '';
       renderQr(p.url);

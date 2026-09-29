@@ -122,6 +122,15 @@ function normalizeProperty(p) {
 
   const surface = num(p.total_surface) || num(p.surface) || num(p.roofed_surface);
 
+  // Superficie de terreno y construida por separado. En departamentos y oficinas
+  // la "superficie" de Tokko no es un terreno propio, así que no se muestra.
+  const type = comparable(p.type?.name);
+  const landSurface = ['departamento', 'oficina', 'cochera'].includes(type) ? null : num(p.surface);
+  const total = num(p.total_surface);
+  const builtSurface = type === 'terreno'
+    ? null
+    : num(p.roofed_surface) || (total && (!landSurface || total < landSurface) ? total : null);
+
   return {
     id: p.id,
     // Algunos códigos traen el del portal pegado: "MMD-183::ZP-M-565" -> "MMD-183"
@@ -138,6 +147,8 @@ function normalizeProperty(p) {
     parking: num(p.parking_lot_amount),
     surface,
     roofedSurface: num(p.roofed_surface),
+    landSurface,
+    builtSurface,
     description: cleanText(p.description).slice(0, 280),
     creditEligible: /^apto/i.test(String(p.credit_eligible || '')),
     stamp: /^apto/i.test(String(p.credit_eligible || '')) ? '✓ Apto crédito' : '',

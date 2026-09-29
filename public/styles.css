@@ -189,6 +189,19 @@ html, body {
 }
 
 .features li svg { margin-right: 16px; }
+.features li.area span { line-height: 1.05; }
+.features li.area small {
+  display: block;
+  margin-top: 4px;
+  font-size: 22px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Con superficies separadas entran hasta 6 datos (3 filas): más juntos para no pisar el QR */
+.features.compact { gap: 12px 30px; margin-top: 28px; }
+
 .features.single { grid-template-columns: 1fr; gap: 16px; }
 
 .features svg {

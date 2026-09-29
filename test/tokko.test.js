@@ -137,3 +137,17 @@ test('toma los datos de la inmobiliaria de la sucursal de Tokko', () => {
   assert.deepEqual(agency, { name: 'Maidana propiedades', phone: '(348) 431-2950', email: 'info@x.com', logoUrl: 'logo.png' });
   assert.equal(extractAgency([{}]), null);
 });
+
+test('superficie de terreno y cubierta por separado', () => {
+  const casa = normalizeProperty({ ...raw, type: { name: 'Casa' }, surface: '392.00', roofed_surface: '148.00', total_surface: '148.00' });
+  assert.equal(casa.landSurface, 392);
+  assert.equal(casa.builtSurface, 148);
+  const casaSinCubierta = normalizeProperty({ ...raw, type: { name: 'Casa' }, surface: '235.00', roofed_surface: '0', total_surface: '117.00' });
+  assert.equal(casaSinCubierta.builtSurface, 117);
+  const depto = normalizeProperty({ ...raw, type: { name: 'Departamento' }, surface: '60.00', roofed_surface: '45.00' });
+  assert.equal(depto.landSurface, null);
+  assert.equal(depto.builtSurface, 45);
+  const lote = normalizeProperty({ ...raw, type: { name: 'Terreno' }, surface: '350.00', total_surface: '350.00' });
+  assert.equal(lote.landSurface, 350);
+  assert.equal(lote.builtSurface, null);
+});
