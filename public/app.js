@@ -17,11 +17,62 @@
   let timers = [];
 
   // ---------- Escalado del lienzo 1920x1080 ----------
+  // Se escala a mano (escala desde la esquina y se centra con left/top) porque los
+  // navegadores de algunos Smart TV no entienden bien la versión con porcentajes.
+  // ?escala=40 en la dirección fuerza el tamaño (40 = 40%) si una TV informa mal su pantalla.
+  const forcedScale = (function () {
+    const m = /[?&]escala=(\d+(?:\.\d+)?)/.exec(location.search);
+    return m ? Number(m[1]) / 100 : 0;
+  })();
+  const styleProbe = document.documentElement.style;
+  const transformProp = 'transform' in styleProbe ? 'transform'
+    : 'webkitTransform' in styleProbe ? 'webkitTransform'
+      : 'msTransform' in styleProbe ? 'msTransform' : null;
+
+  function viewportSize() {
+    const de = document.documentElement;
+    return {
+      w: window.innerWidth || de.clientWidth || screen.width,
+      h: window.innerHeight || de.clientHeight || screen.height,
+    };
+  }
+
+  let lastFit = '';
   function fit() {
-    const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-    stage.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    const vp = viewportSize();
+    const scale = forcedScale || Math.min(vp.w / 1920, vp.h / 1080);
+    const key = vp.w + 'x' + vp.h + '@' + scale;
+    if (key === lastFit) return;
+    lastFit = key;
+    const left = Math.max(0, (vp.w - 1920 * scale) / 2);
+    const top = Math.max(0, (vp.h - 1080 * scale) / 2);
+    if (transformProp) {
+      stage.style[transformProp] = 'scale(' + scale + ')';
+      stage.style.left = left + 'px';
+      stage.style.top = top + 'px';
+    } else {
+      // Último recurso para navegadores sin transform
+      stage.style.zoom = scale;
+      stage.style.left = left / scale + 'px';
+      stage.style.top = top / scale + 'px';
+    }
+    if (/[?&]debug=1/.test(location.search)) {
+      let box = document.getElementById('debug');
+      if (!box) {
+        box = document.createElement('div');
+        box.id = 'debug';
+        box.style.cssText = 'position:fixed;left:0;top:0;z-index:99;padding:6px 10px;background:#000;color:#0f0;font:14px monospace';
+        document.body.appendChild(box);
+      }
+      box.textContent = 'Pantalla ' + vp.w + 'x' + vp.h + ' | escala ' + Math.round(scale * 100) +
+        '% | dpr ' + (window.devicePixelRatio || 1) + ' | ' + (transformProp || 'zoom');
+    }
   }
   window.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', fit);
+  window.addEventListener('load', fit);
+  // Algunas TV informan el tamaño real recién después de cargar
+  setInterval(fit, 3000);
   fit();
 
   // ---------- Reloj ----------

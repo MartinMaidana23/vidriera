@@ -27,11 +27,13 @@ html, body {
 
 .stage {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: 0;
+  left: 0;
   width: 1920px;
   height: 1080px;
-  transform-origin: center center;
+  -webkit-transform-origin: 0 0;
+  -ms-transform-origin: 0 0;
+  transform-origin: 0 0;
   background: var(--panel-bg);
   overflow: hidden;
 }
